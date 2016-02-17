@@ -33,7 +33,7 @@ module.exports = class Server extends EventEmitter {
 
     this.waitings.push(socket.id)
 
-    while (this.assignPlayer());
+    this.assignPlayers()
   }
   disconnect (socket) {
     info(`client ${socket.id} disconnected`)
@@ -44,18 +44,19 @@ module.exports = class Server extends EventEmitter {
     if (this.players[0] === socket.id) this.players[0] = null
     if (this.players[1] === socket.id) this.players[1] = null
 
-    while (this.assignPlayer());
+    this.assignPlayers()
   }
 
-  assignPlayer() {
-    const playerIndex = this.getNoControlledPlayerIndex()
-    if (playerIndex === null) return false
+  assignPlayers() {
+    while (true) {
+      const playerIndex = this.getNoControlledPlayerIndex()
+      if (playerIndex === null) return
 
-    const waitingSocket = this.getFirstWaitingSocket()
-    if (waitingSocket === null) return false
+      const waitingSocket = this.getFirstWaitingSocket()
+      if (waitingSocket === null) return
 
-    this.assignSocketToPlayer(waitingSocket, playerIndex)
-    return true
+      this.assignSocketToPlayer(waitingSocket, playerIndex)
+    }
   }
   getNoControlledPlayerIndex() {
     if (this.players[0] === null) return 0
