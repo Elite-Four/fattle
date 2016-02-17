@@ -97,7 +97,7 @@ module.exports = class Server extends EventEmitter {
     socket.broadcast.emit('depress', index, button)
   }
   broadcastScreen (screen) {
-    encode(screen).then(buffer => {
+    return encode(screen).then(buffer => {
       // debug(`screen encoded into ${buffer.length} bytes.`)
       this.io.emit('screen', buffer)
     }, err => {
