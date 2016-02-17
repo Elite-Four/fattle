@@ -33,7 +33,7 @@ module.exports = class Server extends EventEmitter {
 
     this.waitings.push(socket.id)
 
-    while (true) if (!this.assignPlayer()) break
+    while (this.assignPlayer());
   }
   disconnect (socket) {
     info(`client ${socket.id} disconnected`)
@@ -44,7 +44,7 @@ module.exports = class Server extends EventEmitter {
     if (this.players[0] === socket.id) this.players[0] = null
     if (this.players[1] === socket.id) this.players[1] = null
 
-    while (true) if (!this.assignPlayer()) break
+    while (this.assignPlayer());
   }
 
   assignPlayer() {
