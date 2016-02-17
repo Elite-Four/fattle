@@ -74,6 +74,7 @@ module.exports = class Server extends EventEmitter {
   assignSocketToPlayer(socket, index) {
     info(`client ${socket.id} is player ${index + 1}`)
 
+    this.players[index] = socket.id
     socket.on('press', button => this.press(socket, index, button))
     socket.on('depress', button => this.depress(socket, index, button))
 
