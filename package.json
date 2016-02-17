@@ -1,0 +1,34 @@
+{
+  "name": "fattle",
+  "version": "0.0.0",
+  "description": "Fattle is a cloud service of FC(NES) game, deployed on Heroku & GitHub Pages.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "dev": "DEBUG=fattle:* nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elite-Four/fattle.git"
+  },
+  "keywords": [
+    "fc",
+    "nes",
+    "emulator"
+  ],
+  "author": "George Chung <Gerhut@GMail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Elite-Four/fattle/issues"
+  },
+  "homepage": "https://github.com/Elite-Four/fattle#readme",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "nesnes": "^0.1.5",
+    "sharp": "^0.13.0",
+    "socket.io": "^1.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
+  }
+}
