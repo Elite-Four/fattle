@@ -10,7 +10,7 @@ const encode = module.exports = function encode(graphics) {
       height: encode.height,
       channels: 4
     }
-  }).png().compressionLevel(9).toBuffer()
+  }).png().toBuffer()
 }
 
 encode.width = 256
