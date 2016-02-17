@@ -1,5 +1,6 @@
 'use strict'
 
+const info = require('debug')('fattle:game:info')
 const debug = require('debug')('fattle:game:debug')
 const error = require('debug')('fattle:game:error')
 const NesNes = require('nesnes')
@@ -13,6 +14,7 @@ module.exports = class Game {
 
     emulator.initCartridge(cartridge)
     emulator.run()
+    info('game started')
 
     this.emulator = emulator
   }

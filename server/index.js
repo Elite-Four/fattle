@@ -9,7 +9,6 @@ const IO = require('socket.io')
 
 const encode = require('./encode')
 
-
 module.exports = class Server extends EventEmitter {
   constructor () {
     super()
@@ -22,6 +21,8 @@ module.exports = class Server extends EventEmitter {
     this.waitings = []
   }
   listen (port) {
+    info(`server listenning on ${port}`)
+
     this.io.listen(port)
   }
 
@@ -81,18 +82,18 @@ module.exports = class Server extends EventEmitter {
   press (socket, index, button) {
     if (this.players[index] !== socket.id) return
 
-    debug(`client ${socket.id}(player ${index + 1}) press ${button}`)
+    info(`client ${socket.id} press ${button}`)
     this.emit('press', index, button)
   }
   depress (socket, index, button) {
     if (this.players[index] !== socket.id) return
 
-    debug(`client ${socket.id}(player ${index + 1}) depress ${button}`)
+    info(`client ${socket.id} depress ${button}`)
     this.emit('depress', index, button)
   }
   broadcastScreen (screen) {
     encode(screen).then(buffer => {
-      //debug(`screen encoded into ${buffer.length} bytes.`)
+      // debug(`screen encoded into ${buffer.length} bytes.`)
       this.io.emit('screen', buffer)
     }, err => {
       error(`screen encoded failed: ${err.message}`)
