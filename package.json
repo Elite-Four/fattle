@@ -17,7 +17,7 @@
     "nes",
     "battle"
   ],
-  "author": "Dafrok",
+  "author": "Dafrok <o.o@mug.dog>",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/Elite-Four/fattle/issues"
@@ -39,6 +39,8 @@
     "material-ui": "^0.14.4",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
-    "react-tap-event-plugin": "^0.2.2"
+    "react-tap-event-plugin": "^0.2.2",
+    "socket.io": "^1.4.5",
+    "socket.io-client": "^1.4.5"
   }
 }
