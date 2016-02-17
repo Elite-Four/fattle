@@ -3,6 +3,7 @@
 const EventEmitter = require('events')
 
 const debug = require('debug')('fattle:server:debug')
+const info = require('debug')('fattle:server:info')
 const error = require('debug')('fattle:server:error')
 const IO = require('socket.io')
 
@@ -20,7 +21,7 @@ module.exports = class Server extends EventEmitter {
     this.io.listen(port)
   }
   connection (socket) {
-    debug(`client ${socket.id} connected`)
+    info(`client ${socket.id} connected`)
     socket.on('press', (index, button) => this.emit('press', index, button))
     socket.on('depress', (index, button) => this.emit('depress', index, button))
   }

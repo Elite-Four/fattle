@@ -3,6 +3,9 @@
 const path = require('path')
 const fs = require('fs')
 
+const info = require('debug')('fattle:info')
+const error = require('debug')('fattle:error')
+
 const Game = require('./game/nes')
 const Server = require('./server')
 
@@ -20,3 +23,8 @@ setInterval((game, server) => {
 }, 100, game, server)
 
 server.listen(process.env.PORT)
+
+info(`server listenning on ${process.env.PORT}`)
+
+process.on('uncaughtException', err => info(`uncaught exception: "${err.message}" at ${err.stack}`))
+process.on('unhandledRejection', err => info(`unhandle rejection: "${err.message}" at ${err.stack}`))
