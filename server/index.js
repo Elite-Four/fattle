@@ -2,8 +2,8 @@
 
 const EventEmitter = require('events')
 
-const debug = require('debug')('fattle:server:debug')
 const info = require('debug')('fattle:server:info')
+const debug = require('debug')('fattle:server:debug')
 const error = require('debug')('fattle:server:error')
 const IO = require('socket.io')
 

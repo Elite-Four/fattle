@@ -13,10 +13,12 @@ module.exports = class Game {
     emulator.output.video.run = () => {}
 
     emulator.initCartridge(cartridge)
-    emulator.run()
-    info('game started')
 
     this.emulator = emulator
+  }
+  run () {
+    this.emulator.run()
+    info('game started')
   }
   get screen () {
     return this.emulator.output.video.data

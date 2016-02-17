@@ -23,6 +23,7 @@ void function broadcast() {
 }()
 
 server.listen(process.env.PORT)
+game.run()
 
-process.on('uncaughtException', err => error(`uncaught exception: "${err.message}" at ${err.stack}`))
-process.on('unhandledRejection', err => error(`unhandle rejection: "${err.message}" at ${err.stack}`))
+process.on('uncaughtException', err => error(`uncaught exception: ${err.stack}`))
+process.on('unhandledRejection', err => error(`unhandle rejection: ${err.stack}`))
