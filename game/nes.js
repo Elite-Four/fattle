@@ -1,22 +1,42 @@
 'use strict'
 
+const EventEmitter = require('events')
+
 const info = require('debug')('fattle:game:info')
 const debug = require('debug')('fattle:game:debug')
 const error = require('debug')('fattle:game:error')
 const NesNes = require('nesnes')
 
-module.exports = class Game {
+
+
+module.exports = class Game extends EventEmitter {
   constructor (cartridge) {
+    super()
+
+    // Temporary disable Object.preventExtensions
+    const preventExtensions = Object.preventExtensions
+    Object.preventExtensions = () => {}
     const emulator = new NesNes()
+    Object.preventExtensions = preventExtensions
 
     emulator.output.audio.setEnabled(false)
     emulator.output.video.run = () => {}
 
     emulator.initCartridge(cartridge)
-    emulator.run()
-    info('game started')
+
+    // Hook runFrame
+    const game = this
+    const originRunFrame = emulator.runFrame
+    emulator.runFrame = function () {
+      originRunFrame.call(this)
+      game.emit('frame')
+    }
 
     this.emulator = emulator
+  }
+  start () {
+    this.emulator.run()
+    info('game started')
   }
   get screen () {
     return this.emulator.output.video.data
