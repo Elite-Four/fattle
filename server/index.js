@@ -85,12 +85,16 @@ module.exports = class Server extends EventEmitter {
 
     info(`client ${socket.id} press ${button}`)
     this.emit('press', index, button)
+
+    socket.broadcast.emit('press', index, button)
   }
   depress (socket, index, button) {
     if (this.players[index] !== socket.id) return
 
     info(`client ${socket.id} depress ${button}`)
     this.emit('depress', index, button)
+
+    socket.broadcast.emit('depress', index, button)
   }
   broadcastScreen (screen) {
     encode(screen).then(buffer => {
