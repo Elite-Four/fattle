@@ -17,9 +17,10 @@ const server = new Server()
 server.on('press', (index, button) => game.press(index, button))
 server.on('depress', (index, button) => game.depress(index, button))
 
-setInterval((game, server) => {
+void function broadcast() {
   server.broadcastScreen(game.screen)
-}, 100, game, server)
+    .then(() => setTimeout(broadcast, 100))
+}()
 
 server.listen(process.env.PORT)
 
