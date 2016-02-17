@@ -64,9 +64,11 @@
 
 	var _screen2 = _interopRequireDefault(_screen);
 
-	var _reactTapEventPlugin = __webpack_require__(328);
+	var _reactTapEventPlugin = __webpack_require__(302);
 
 	var _reactTapEventPlugin2 = _interopRequireDefault(_reactTapEventPlugin);
+
+	__webpack_require__(307);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -114,7 +116,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  background: #eee;\n  padding: 0;\n  margin: 0;\n}\n", ""]);
+	exports.push([module.id, "* {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\nbody {\n  background: #eee;\n  padding: 0;\n  margin: 0;\n}\n.screen {\n  width: 256px;\n  height: 244px;\n}\n.screen img {\n  width: 100%;\n  height: 100%;\n}\n.hidden {\n  display: none;\n}\n", ""]);
 
 	// exports
 
@@ -20099,7 +20101,7 @@
 	        'div',
 	        null,
 	        _react2.default.createElement(_appBar2.default, {
-	          title: 'Fattle Online',
+	          title: 'Fattle',
 	          iconClassNameRight: 'muidocs-icon-navigation-expand-more',
 	          onLeftIconButtonTouchTap: this.handleToggle
 	        }),
@@ -35457,9 +35459,21 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _socket = __webpack_require__(278);
+	var _reflux = __webpack_require__(278);
 
-	var _socket2 = _interopRequireDefault(_socket);
+	var _reflux2 = _interopRequireDefault(_reflux);
+
+	var _reactMixin = __webpack_require__(297);
+
+	var _reactMixin2 = _interopRequireDefault(_reactMixin);
+
+	var _emu = __webpack_require__(300);
+
+	var _emu2 = _interopRequireDefault(_emu);
+
+	var _actions = __webpack_require__(301);
+
+	var _actions2 = _interopRequireDefault(_actions);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -35477,25 +35491,34 @@
 
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Screen).call(this, props));
 
-	    _this.componentDidMount = function () {
-	      var socket = _socket2.default.connect('https://fattle-gerhut.c9users.io/');
-	      socket.on('screen', function (screen) {
-	        var blob = new Blob([screen], { type: 'image/png' });
-	        _this.setState({ imageData: URL.createObjectURL(blob) });
-	      });
+	    _this.onStatusChange = function (gameScreen) {
+	      _this.setState({ gameScreen: gameScreen });
 	    };
 
-	    _this.state = { imageData: '' };
+	    _this.state = {
+	      gameScreen: null
+	    };
+	    _reflux2.default.listenTo(_emu2.default, 'onStatusChange');
 	    return _this;
 	  }
 
 	  _createClass(Screen, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.unsubscribe = _emu2.default.listen(this.onStatusChange);
+	    }
+	  }, {
+	    key: 'componentWillUnmount',
+	    value: function componentWillUnmount() {
+	      this.unsubscribe();
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
 	        'div',
-	        null,
-	        _react2.default.createElement('img', { src: this.state.imageData, alt: 'loading' })
+	        { className: 'screen' },
+	        _react2.default.createElement('img', { className: !this.state.gameScreen ? 'hidden' : '', src: this.state.gameScreen, alt: this.state.gameScreen })
 	      );
 	    }
 	  }]);
@@ -35509,15 +35532,2187 @@
 /* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var Reflux = __webpack_require__(279);
+
+	Reflux.connect = __webpack_require__(292);
+
+	Reflux.connectFilter = __webpack_require__(294);
+
+	Reflux.ListenerMixin = __webpack_require__(293);
+
+	Reflux.listenTo = __webpack_require__(295);
+
+	Reflux.listenToMany = __webpack_require__(296);
+
+	module.exports = Reflux;
+
+
+/***/ },
+/* 279 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	var Reflux = {
+	    version: {
+	        "reflux-core": "0.3.0"
+	    }
+	};
+
+	Reflux.ActionMethods = __webpack_require__(280);
+
+	Reflux.ListenerMethods = __webpack_require__(281);
+
+	Reflux.PublisherMethods = __webpack_require__(290);
+
+	Reflux.StoreMethods = __webpack_require__(289);
+
+	Reflux.createAction = __webpack_require__(291);
+
+	Reflux.createStore = __webpack_require__(285);
+
+	var maker = __webpack_require__(284).staticJoinCreator;
+
+	Reflux.joinTrailing = Reflux.all = maker("last"); // Reflux.all alias for backward compatibility
+
+	Reflux.joinLeading = maker("first");
+
+	Reflux.joinStrict = maker("strict");
+
+	Reflux.joinConcat = maker("all");
+
+	var _ = Reflux.utils = __webpack_require__(282);
+
+	Reflux.EventEmitter = _.EventEmitter;
+
+	Reflux.Promise = _.Promise;
+
+	/**
+	 * Convenience function for creating a set of actions
+	 *
+	 * @param definitions the definitions for the actions to be created
+	 * @returns an object with actions of corresponding action names
+	 */
+	Reflux.createActions = (function () {
+	    var reducer = function reducer(definitions, actions) {
+	        Object.keys(definitions).forEach(function (actionName) {
+	            var val = definitions[actionName];
+	            actions[actionName] = Reflux.createAction(val);
+	        });
+	    };
+
+	    return function (definitions) {
+	        var actions = {};
+	        if (definitions instanceof Array) {
+	            definitions.forEach(function (val) {
+	                if (_.isObject(val)) {
+	                    reducer(val, actions);
+	                } else {
+	                    actions[val] = Reflux.createAction(val);
+	                }
+	            });
+	        } else {
+	            reducer(definitions, actions);
+	        }
+	        return actions;
+	    };
+	})();
+
+	/**
+	 * Sets the eventmitter that Reflux uses
+	 */
+	Reflux.setEventEmitter = function (ctx) {
+	    Reflux.EventEmitter = _.EventEmitter = ctx;
+	};
+
+	/**
+	 * Sets the method used for deferring actions and stores
+	 */
+	Reflux.nextTick = function (nextTick) {
+	    _.nextTick = nextTick;
+	};
+
+	Reflux.use = function (pluginCb) {
+	    pluginCb(Reflux);
+	};
+
+	/**
+	 * Provides the set of created actions and stores for introspection
+	 */
+	/*eslint-disable no-underscore-dangle*/
+	Reflux.__keep = __webpack_require__(286);
+	/*eslint-enable no-underscore-dangle*/
+
+	/**
+	 * Warn if Function.prototype.bind not available
+	 */
+	if (!Function.prototype.bind) {
+	    console.error("Function.prototype.bind not available. " + "ES5 shim required. " + "https://github.com/spoike/refluxjs#es5");
+	}
+
+	exports["default"] = Reflux;
+	module.exports = exports["default"];
+
+/***/ },
+/* 280 */
+/***/ function(module, exports) {
+
+	/**
+	 * A module of methods that you want to include in all actions.
+	 * This module is consumed by `createAction`.
+	 */
+	"use strict";
+
+	module.exports = {};
+
+/***/ },
+/* 281 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _ = __webpack_require__(282),
+	    maker = __webpack_require__(284).instanceJoinCreator;
+
+	/**
+	 * Extract child listenables from a parent from their
+	 * children property and return them in a keyed Object
+	 *
+	 * @param {Object} listenable The parent listenable
+	 */
+	var mapChildListenables = function mapChildListenables(listenable) {
+	    var i = 0,
+	        children = {},
+	        childName;
+	    for (; i < (listenable.children || []).length; ++i) {
+	        childName = listenable.children[i];
+	        if (listenable[childName]) {
+	            children[childName] = listenable[childName];
+	        }
+	    }
+	    return children;
+	};
+
+	/**
+	 * Make a flat dictionary of all listenables including their
+	 * possible children (recursively), concatenating names in camelCase.
+	 *
+	 * @param {Object} listenables The top-level listenables
+	 */
+	var flattenListenables = function flattenListenables(listenables) {
+	    var flattened = {};
+	    for (var key in listenables) {
+	        var listenable = listenables[key];
+	        var childMap = mapChildListenables(listenable);
+
+	        // recursively flatten children
+	        var children = flattenListenables(childMap);
+
+	        // add the primary listenable and chilren
+	        flattened[key] = listenable;
+	        for (var childKey in children) {
+	            var childListenable = children[childKey];
+	            flattened[key + _.capitalize(childKey)] = childListenable;
+	        }
+	    }
+
+	    return flattened;
+	};
+
+	/**
+	 * A module of methods related to listening.
+	 */
+	module.exports = {
+
+	    /**
+	     * An internal utility function used by `validateListening`
+	     *
+	     * @param {Action|Store} listenable The listenable we want to search for
+	     * @returns {Boolean} The result of a recursive search among `this.subscriptions`
+	     */
+	    hasListener: function hasListener(listenable) {
+	        var i = 0,
+	            j,
+	            listener,
+	            listenables;
+	        for (; i < (this.subscriptions || []).length; ++i) {
+	            listenables = [].concat(this.subscriptions[i].listenable);
+	            for (j = 0; j < listenables.length; j++) {
+	                listener = listenables[j];
+	                if (listener === listenable || listener.hasListener && listener.hasListener(listenable)) {
+	                    return true;
+	                }
+	            }
+	        }
+	        return false;
+	    },
+
+	    /**
+	     * A convenience method that listens to all listenables in the given object.
+	     *
+	     * @param {Object} listenables An object of listenables. Keys will be used as callback method names.
+	     */
+	    listenToMany: function listenToMany(listenables) {
+	        var allListenables = flattenListenables(listenables);
+	        for (var key in allListenables) {
+	            var cbname = _.callbackName(key),
+	                localname = this[cbname] ? cbname : this[key] ? key : undefined;
+	            if (localname) {
+	                this.listenTo(allListenables[key], localname, this[cbname + "Default"] || this[localname + "Default"] || localname);
+	            }
+	        }
+	    },
+
+	    /**
+	     * Checks if the current context can listen to the supplied listenable
+	     *
+	     * @param {Action|Store} listenable An Action or Store that should be
+	     *  listened to.
+	     * @returns {String|Undefined} An error message, or undefined if there was no problem.
+	     */
+	    validateListening: function validateListening(listenable) {
+	        if (listenable === this) {
+	            return "Listener is not able to listen to itself";
+	        }
+	        if (!_.isFunction(listenable.listen)) {
+	            return listenable + " is missing a listen method";
+	        }
+	        if (listenable.hasListener && listenable.hasListener(this)) {
+	            return "Listener cannot listen to this listenable because of circular loop";
+	        }
+	    },
+
+	    /**
+	     * Sets up a subscription to the given listenable for the context object
+	     *
+	     * @param {Action|Store} listenable An Action or Store that should be
+	     *  listened to.
+	     * @param {Function|String} callback The callback to register as event handler
+	     * @param {Function|String} defaultCallback The callback to register as default handler
+	     * @returns {Object} A subscription obj where `stop` is an unsub function and `listenable` is the object being listened to
+	     */
+	    listenTo: function listenTo(listenable, callback, defaultCallback) {
+	        var desub,
+	            unsubscriber,
+	            subscriptionobj,
+	            subs = this.subscriptions = this.subscriptions || [];
+	        _.throwIf(this.validateListening(listenable));
+	        this.fetchInitialState(listenable, defaultCallback);
+	        desub = listenable.listen(this[callback] || callback, this);
+	        unsubscriber = function () {
+	            var index = subs.indexOf(subscriptionobj);
+	            _.throwIf(index === -1, "Tried to remove listen already gone from subscriptions list!");
+	            subs.splice(index, 1);
+	            desub();
+	        };
+	        subscriptionobj = {
+	            stop: unsubscriber,
+	            listenable: listenable
+	        };
+	        subs.push(subscriptionobj);
+	        return subscriptionobj;
+	    },
+
+	    /**
+	     * Stops listening to a single listenable
+	     *
+	     * @param {Action|Store} listenable The action or store we no longer want to listen to
+	     * @returns {Boolean} True if a subscription was found and removed, otherwise false.
+	     */
+	    stopListeningTo: function stopListeningTo(listenable) {
+	        var sub,
+	            i = 0,
+	            subs = this.subscriptions || [];
+	        for (; i < subs.length; i++) {
+	            sub = subs[i];
+	            if (sub.listenable === listenable) {
+	                sub.stop();
+	                _.throwIf(subs.indexOf(sub) !== -1, "Failed to remove listen from subscriptions list!");
+	                return true;
+	            }
+	        }
+	        return false;
+	    },
+
+	    /**
+	     * Stops all subscriptions and empties subscriptions array
+	     */
+	    stopListeningToAll: function stopListeningToAll() {
+	        var remaining,
+	            subs = this.subscriptions || [];
+	        while (remaining = subs.length) {
+	            subs[0].stop();
+	            _.throwIf(subs.length !== remaining - 1, "Failed to remove listen from subscriptions list!");
+	        }
+	    },
+
+	    /**
+	     * Used in `listenTo`. Fetches initial data from a publisher if it has a `getInitialState` method.
+	     * @param {Action|Store} listenable The publisher we want to get initial state from
+	     * @param {Function|String} defaultCallback The method to receive the data
+	     */
+	    fetchInitialState: function fetchInitialState(listenable, defaultCallback) {
+	        defaultCallback = defaultCallback && this[defaultCallback] || defaultCallback;
+	        var me = this;
+	        if (_.isFunction(defaultCallback) && _.isFunction(listenable.getInitialState)) {
+	            var data = listenable.getInitialState();
+	            if (data && _.isFunction(data.then)) {
+	                data.then(function () {
+	                    defaultCallback.apply(me, arguments);
+	                });
+	            } else {
+	                defaultCallback.call(this, data);
+	            }
+	        }
+	    },
+
+	    /**
+	     * The callback will be called once all listenables have triggered at least once.
+	     * It will be invoked with the last emission from each listenable.
+	     * @param {...Publishers} publishers Publishers that should be tracked.
+	     * @param {Function|String} callback The method to call when all publishers have emitted
+	     * @returns {Object} A subscription obj where `stop` is an unsub function and `listenable` is an array of listenables
+	     */
+	    joinTrailing: maker("last"),
+
+	    /**
+	     * The callback will be called once all listenables have triggered at least once.
+	     * It will be invoked with the first emission from each listenable.
+	     * @param {...Publishers} publishers Publishers that should be tracked.
+	     * @param {Function|String} callback The method to call when all publishers have emitted
+	     * @returns {Object} A subscription obj where `stop` is an unsub function and `listenable` is an array of listenables
+	     */
+	    joinLeading: maker("first"),
+
+	    /**
+	     * The callback will be called once all listenables have triggered at least once.
+	     * It will be invoked with all emission from each listenable.
+	     * @param {...Publishers} publishers Publishers that should be tracked.
+	     * @param {Function|String} callback The method to call when all publishers have emitted
+	     * @returns {Object} A subscription obj where `stop` is an unsub function and `listenable` is an array of listenables
+	     */
+	    joinConcat: maker("all"),
+
+	    /**
+	     * The callback will be called once all listenables have triggered.
+	     * If a callback triggers twice before that happens, an error is thrown.
+	     * @param {...Publishers} publishers Publishers that should be tracked.
+	     * @param {Function|String} callback The method to call when all publishers have emitted
+	     * @returns {Object} A subscription obj where `stop` is an unsub function and `listenable` is an array of listenables
+	     */
+	    joinStrict: maker("strict")
+	};
+
+/***/ },
+/* 282 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.capitalize = capitalize;
+	exports.callbackName = callbackName;
+	exports.isObject = isObject;
+	exports.extend = extend;
+	exports.isFunction = isFunction;
+	exports.object = object;
+	exports.isArguments = isArguments;
+	exports.throwIf = throwIf;
+
+	function capitalize(string) {
+	    return string.charAt(0).toUpperCase() + string.slice(1);
+	}
+
+	function callbackName(string, prefix) {
+	    prefix = prefix || "on";
+	    return prefix + exports.capitalize(string);
+	}
+
+	/*
+	 * isObject, extend, isFunction, isArguments are taken from undescore/lodash in
+	 * order to remove the dependency
+	 */
+
+	function isObject(obj) {
+	    var type = typeof obj;
+	    return type === "function" || type === "object" && !!obj;
+	}
+
+	function extend(obj) {
+	    if (!isObject(obj)) {
+	        return obj;
+	    }
+	    var source, prop;
+	    for (var i = 1, length = arguments.length; i < length; i++) {
+	        source = arguments[i];
+	        for (prop in source) {
+	            if (Object.getOwnPropertyDescriptor && Object.defineProperty) {
+	                var propertyDescriptor = Object.getOwnPropertyDescriptor(source, prop);
+	                Object.defineProperty(obj, prop, propertyDescriptor);
+	            } else {
+	                obj[prop] = source[prop];
+	            }
+	        }
+	    }
+	    return obj;
+	}
+
+	function isFunction(value) {
+	    return typeof value === "function";
+	}
+
+	exports.EventEmitter = __webpack_require__(283);
+
+	exports.nextTick = function (callback) {
+	    setTimeout(callback, 0);
+	};
+
+	function object(keys, vals) {
+	    var o = {},
+	        i = 0;
+	    for (; i < keys.length; i++) {
+	        o[keys[i]] = vals[i];
+	    }
+	    return o;
+	}
+
+	function isArguments(value) {
+	    return typeof value === "object" && "callee" in value && typeof value.length === "number";
+	}
+
+	function throwIf(val, msg) {
+	    if (val) {
+	        throw Error(msg || val);
+	    }
+	}
+
+/***/ },
+/* 283 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	//
+	// We store our EE objects in a plain object whose properties are event names.
+	// If `Object.create(null)` is not supported we prefix the event names with a
+	// `~` to make sure that the built-in object properties are not overridden or
+	// used as an attack vector.
+	// We also assume that `Object.create(null)` is available when the event name
+	// is an ES6 Symbol.
+	//
+	var prefix = typeof Object.create !== 'function' ? '~' : false;
+
+	/**
+	 * Representation of a single EventEmitter function.
+	 *
+	 * @param {Function} fn Event handler to be called.
+	 * @param {Mixed} context Context for function execution.
+	 * @param {Boolean} once Only emit once
+	 * @api private
+	 */
+	function EE(fn, context, once) {
+	  this.fn = fn;
+	  this.context = context;
+	  this.once = once || false;
+	}
+
+	/**
+	 * Minimal EventEmitter interface that is molded against the Node.js
+	 * EventEmitter interface.
+	 *
+	 * @constructor
+	 * @api public
+	 */
+	function EventEmitter() { /* Nothing to set */ }
+
+	/**
+	 * Holds the assigned EventEmitters by name.
+	 *
+	 * @type {Object}
+	 * @private
+	 */
+	EventEmitter.prototype._events = undefined;
+
+	/**
+	 * Return a list of assigned event listeners.
+	 *
+	 * @param {String} event The events that should be listed.
+	 * @param {Boolean} exists We only need to know if there are listeners.
+	 * @returns {Array|Boolean}
+	 * @api public
+	 */
+	EventEmitter.prototype.listeners = function listeners(event, exists) {
+	  var evt = prefix ? prefix + event : event
+	    , available = this._events && this._events[evt];
+
+	  if (exists) return !!available;
+	  if (!available) return [];
+	  if (available.fn) return [available.fn];
+
+	  for (var i = 0, l = available.length, ee = new Array(l); i < l; i++) {
+	    ee[i] = available[i].fn;
+	  }
+
+	  return ee;
+	};
+
+	/**
+	 * Emit an event to all registered event listeners.
+	 *
+	 * @param {String} event The name of the event.
+	 * @returns {Boolean} Indication if we've emitted an event.
+	 * @api public
+	 */
+	EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+	  var evt = prefix ? prefix + event : event;
+
+	  if (!this._events || !this._events[evt]) return false;
+
+	  var listeners = this._events[evt]
+	    , len = arguments.length
+	    , args
+	    , i;
+
+	  if ('function' === typeof listeners.fn) {
+	    if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+
+	    switch (len) {
+	      case 1: return listeners.fn.call(listeners.context), true;
+	      case 2: return listeners.fn.call(listeners.context, a1), true;
+	      case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+	      case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+	      case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+	      case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+	    }
+
+	    for (i = 1, args = new Array(len -1); i < len; i++) {
+	      args[i - 1] = arguments[i];
+	    }
+
+	    listeners.fn.apply(listeners.context, args);
+	  } else {
+	    var length = listeners.length
+	      , j;
+
+	    for (i = 0; i < length; i++) {
+	      if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
+
+	      switch (len) {
+	        case 1: listeners[i].fn.call(listeners[i].context); break;
+	        case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+	        case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+	        default:
+	          if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
+	            args[j - 1] = arguments[j];
+	          }
+
+	          listeners[i].fn.apply(listeners[i].context, args);
+	      }
+	    }
+	  }
+
+	  return true;
+	};
+
+	/**
+	 * Register a new EventListener for the given event.
+	 *
+	 * @param {String} event Name of the event.
+	 * @param {Functon} fn Callback function.
+	 * @param {Mixed} context The context of the function.
+	 * @api public
+	 */
+	EventEmitter.prototype.on = function on(event, fn, context) {
+	  var listener = new EE(fn, context || this)
+	    , evt = prefix ? prefix + event : event;
+
+	  if (!this._events) this._events = prefix ? {} : Object.create(null);
+	  if (!this._events[evt]) this._events[evt] = listener;
+	  else {
+	    if (!this._events[evt].fn) this._events[evt].push(listener);
+	    else this._events[evt] = [
+	      this._events[evt], listener
+	    ];
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Add an EventListener that's only called once.
+	 *
+	 * @param {String} event Name of the event.
+	 * @param {Function} fn Callback function.
+	 * @param {Mixed} context The context of the function.
+	 * @api public
+	 */
+	EventEmitter.prototype.once = function once(event, fn, context) {
+	  var listener = new EE(fn, context || this, true)
+	    , evt = prefix ? prefix + event : event;
+
+	  if (!this._events) this._events = prefix ? {} : Object.create(null);
+	  if (!this._events[evt]) this._events[evt] = listener;
+	  else {
+	    if (!this._events[evt].fn) this._events[evt].push(listener);
+	    else this._events[evt] = [
+	      this._events[evt], listener
+	    ];
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Remove event listeners.
+	 *
+	 * @param {String} event The event we want to remove.
+	 * @param {Function} fn The listener that we need to find.
+	 * @param {Mixed} context Only remove listeners matching this context.
+	 * @param {Boolean} once Only remove once listeners.
+	 * @api public
+	 */
+	EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+	  var evt = prefix ? prefix + event : event;
+
+	  if (!this._events || !this._events[evt]) return this;
+
+	  var listeners = this._events[evt]
+	    , events = [];
+
+	  if (fn) {
+	    if (listeners.fn) {
+	      if (
+	           listeners.fn !== fn
+	        || (once && !listeners.once)
+	        || (context && listeners.context !== context)
+	      ) {
+	        events.push(listeners);
+	      }
+	    } else {
+	      for (var i = 0, length = listeners.length; i < length; i++) {
+	        if (
+	             listeners[i].fn !== fn
+	          || (once && !listeners[i].once)
+	          || (context && listeners[i].context !== context)
+	        ) {
+	          events.push(listeners[i]);
+	        }
+	      }
+	    }
+	  }
+
+	  //
+	  // Reset the array, or remove it completely if we have no more listeners.
+	  //
+	  if (events.length) {
+	    this._events[evt] = events.length === 1 ? events[0] : events;
+	  } else {
+	    delete this._events[evt];
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Remove all listeners or only the listeners for the specified event.
+	 *
+	 * @param {String} event The event want to remove all listeners for.
+	 * @api public
+	 */
+	EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+	  if (!this._events) return this;
+
+	  if (event) delete this._events[prefix ? prefix + event : event];
+	  else this._events = prefix ? {} : Object.create(null);
+
+	  return this;
+	};
+
+	//
+	// Alias methods names because people roll like that.
+	//
+	EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+	EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+	//
+	// This function doesn't apply anymore.
+	//
+	EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+	  return this;
+	};
+
+	//
+	// Expose the prefix.
+	//
+	EventEmitter.prefixed = prefix;
+
+	//
+	// Expose the module.
+	//
+	if (true) {
+	  module.exports = EventEmitter;
+	}
+
+
+/***/ },
+/* 284 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Internal module used to create static and instance join methods
+	 */
+
+	"use strict";
+
+	var createStore = __webpack_require__(285),
+	    _ = __webpack_require__(282);
+
+	var slice = Array.prototype.slice,
+	    strategyMethodNames = {
+	    strict: "joinStrict",
+	    first: "joinLeading",
+	    last: "joinTrailing",
+	    all: "joinConcat"
+	};
+
+	/**
+	 * Used in `index.js` to create the static join methods
+	 * @param {String} strategy Which strategy to use when tracking listenable trigger arguments
+	 * @returns {Function} A static function which returns a store with a join listen on the given listenables using the given strategy
+	 */
+	exports.staticJoinCreator = function (strategy) {
+	    return function () /* listenables... */{
+	        var listenables = slice.call(arguments);
+	        return createStore({
+	            init: function init() {
+	                this[strategyMethodNames[strategy]].apply(this, listenables.concat("triggerAsync"));
+	            }
+	        });
+	    };
+	};
+
+	/**
+	 * Used in `ListenerMethods.js` to create the instance join methods
+	 * @param {String} strategy Which strategy to use when tracking listenable trigger arguments
+	 * @returns {Function} An instance method which sets up a join listen on the given listenables using the given strategy
+	 */
+	exports.instanceJoinCreator = function (strategy) {
+	    return function () /* listenables..., callback*/{
+	        _.throwIf(arguments.length < 2, "Cannot create a join with less than 2 listenables!");
+	        var listenables = slice.call(arguments),
+	            callback = listenables.pop(),
+	            numberOfListenables = listenables.length,
+	            join = {
+	            numberOfListenables: numberOfListenables,
+	            callback: this[callback] || callback,
+	            listener: this,
+	            strategy: strategy
+	        },
+	            i,
+	            cancels = [],
+	            subobj;
+	        for (i = 0; i < numberOfListenables; i++) {
+	            _.throwIf(this.validateListening(listenables[i]));
+	        }
+	        for (i = 0; i < numberOfListenables; i++) {
+	            cancels.push(listenables[i].listen(newListener(i, join), this));
+	        }
+	        reset(join);
+	        subobj = { listenable: listenables };
+	        subobj.stop = makeStopper(subobj, cancels, this);
+	        this.subscriptions = (this.subscriptions || []).concat(subobj);
+	        return subobj;
+	    };
+	};
+
+	// ---- internal join functions ----
+
+	function makeStopper(subobj, cancels, context) {
+	    return function () {
+	        var i,
+	            subs = context.subscriptions,
+	            index = subs ? subs.indexOf(subobj) : -1;
+	        _.throwIf(index === -1, "Tried to remove join already gone from subscriptions list!");
+	        for (i = 0; i < cancels.length; i++) {
+	            cancels[i]();
+	        }
+	        subs.splice(index, 1);
+	    };
+	}
+
+	function reset(join) {
+	    join.listenablesEmitted = new Array(join.numberOfListenables);
+	    join.args = new Array(join.numberOfListenables);
+	}
+
+	function newListener(i, join) {
+	    return function () {
+	        var callargs = slice.call(arguments);
+	        if (join.listenablesEmitted[i]) {
+	            switch (join.strategy) {
+	                case "strict":
+	                    throw new Error("Strict join failed because listener triggered twice.");
+	                case "last":
+	                    join.args[i] = callargs;break;
+	                case "all":
+	                    join.args[i].push(callargs);
+	            }
+	        } else {
+	            join.listenablesEmitted[i] = true;
+	            join.args[i] = join.strategy === "all" ? [callargs] : callargs;
+	        }
+	        emitIfAllListenablesEmitted(join);
+	    };
+	}
+
+	function emitIfAllListenablesEmitted(join) {
+	    for (var i = 0; i < join.numberOfListenables; i++) {
+	        if (!join.listenablesEmitted[i]) {
+	            return;
+	        }
+	    }
+	    join.callback.apply(join.listener, join.args);
+	    reset(join);
+	}
+
+/***/ },
+/* 285 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _ = __webpack_require__(282),
+	    Keep = __webpack_require__(286),
+	    mixer = __webpack_require__(287),
+	    bindMethods = __webpack_require__(288);
+
+	var allowed = { preEmit: 1, shouldEmit: 1 };
+
+	/**
+	 * Creates an event emitting Data Store. It is mixed in with functions
+	 * from the `ListenerMethods` and `PublisherMethods` mixins. `preEmit`
+	 * and `shouldEmit` may be overridden in the definition object.
+	 *
+	 * @param {Object} definition The data store object definition
+	 * @returns {Store} A data store instance
+	 */
+	module.exports = function (definition) {
+
+	    var StoreMethods = __webpack_require__(289),
+	        PublisherMethods = __webpack_require__(290),
+	        ListenerMethods = __webpack_require__(281);
+
+	    definition = definition || {};
+
+	    for (var a in StoreMethods) {
+	        if (!allowed[a] && (PublisherMethods[a] || ListenerMethods[a])) {
+	            throw new Error("Cannot override API method " + a + " in Reflux.StoreMethods. Use another method name or override it on Reflux.PublisherMethods / Reflux.ListenerMethods instead.");
+	        }
+	    }
+
+	    for (var d in definition) {
+	        if (!allowed[d] && (PublisherMethods[d] || ListenerMethods[d])) {
+	            throw new Error("Cannot override API method " + d + " in store creation. Use another method name or override it on Reflux.PublisherMethods / Reflux.ListenerMethods instead.");
+	        }
+	    }
+
+	    definition = mixer(definition);
+
+	    function Store() {
+	        var i = 0,
+	            arr;
+	        this.subscriptions = [];
+	        this.emitter = new _.EventEmitter();
+	        this.eventLabel = "change";
+	        bindMethods(this, definition);
+	        if (this.init && _.isFunction(this.init)) {
+	            this.init();
+	        }
+	        if (this.listenables) {
+	            arr = [].concat(this.listenables);
+	            for (; i < arr.length; i++) {
+	                this.listenToMany(arr[i]);
+	            }
+	        }
+	    }
+
+	    _.extend(Store.prototype, ListenerMethods, PublisherMethods, StoreMethods, definition);
+
+	    var store = new Store();
+	    Keep.createdStores.push(store);
+
+	    return store;
+	};
+
+/***/ },
+/* 286 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	exports.createdStores = [];
+
+	exports.createdActions = [];
+
+	exports.reset = function () {
+	    while (exports.createdStores.length) {
+	        exports.createdStores.pop();
+	    }
+	    while (exports.createdActions.length) {
+	        exports.createdActions.pop();
+	    }
+	};
+
+/***/ },
+/* 287 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _ = __webpack_require__(282);
+
+	module.exports = function mix(def) {
+	    var composed = {
+	        init: [],
+	        preEmit: [],
+	        shouldEmit: []
+	    };
+
+	    var updated = (function mixDef(mixin) {
+	        var mixed = {};
+	        if (mixin.mixins) {
+	            mixin.mixins.forEach(function (subMixin) {
+	                _.extend(mixed, mixDef(subMixin));
+	            });
+	        }
+	        _.extend(mixed, mixin);
+	        Object.keys(composed).forEach(function (composable) {
+	            if (mixin.hasOwnProperty(composable)) {
+	                composed[composable].push(mixin[composable]);
+	            }
+	        });
+	        return mixed;
+	    })(def);
+
+	    if (composed.init.length > 1) {
+	        updated.init = function () {
+	            var args = arguments;
+	            composed.init.forEach(function (init) {
+	                init.apply(this, args);
+	            }, this);
+	        };
+	    }
+	    if (composed.preEmit.length > 1) {
+	        updated.preEmit = function () {
+	            return composed.preEmit.reduce((function (args, preEmit) {
+	                var newValue = preEmit.apply(this, args);
+	                return newValue === undefined ? args : [newValue];
+	            }).bind(this), arguments);
+	        };
+	    }
+	    if (composed.shouldEmit.length > 1) {
+	        updated.shouldEmit = function () {
+	            var args = arguments;
+	            return !composed.shouldEmit.some(function (shouldEmit) {
+	                return !shouldEmit.apply(this, args);
+	            }, this);
+	        };
+	    }
+	    Object.keys(composed).forEach(function (composable) {
+	        if (composed[composable].length === 1) {
+	            updated[composable] = composed[composable][0];
+	        }
+	    });
+
+	    return updated;
+	};
+
+/***/ },
+/* 288 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = function (store, definition) {
+	    for (var name in definition) {
+	        if (Object.getOwnPropertyDescriptor && Object.defineProperty) {
+	            var propertyDescriptor = Object.getOwnPropertyDescriptor(definition, name);
+
+	            if (!propertyDescriptor.value || typeof propertyDescriptor.value !== "function" || !definition.hasOwnProperty(name)) {
+	                continue;
+	            }
+
+	            store[name] = definition[name].bind(store);
+	        } else {
+	            var property = definition[name];
+
+	            if (typeof property !== "function" || !definition.hasOwnProperty(name)) {
+	                continue;
+	            }
+
+	            store[name] = property.bind(store);
+	        }
+	    }
+
+	    return store;
+	};
+
+/***/ },
+/* 289 */
+/***/ function(module, exports) {
+
+	/**
+	 * A module of methods that you want to include in all stores.
+	 * This module is consumed by `createStore`.
+	 */
+	"use strict";
+
+	module.exports = {};
+
+/***/ },
+/* 290 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _ = __webpack_require__(282);
+
+	/**
+	 * A module of methods for object that you want to be able to listen to.
+	 * This module is consumed by `createStore` and `createAction`
+	 */
+	module.exports = {
+
+	    /**
+	     * Hook used by the publisher that is invoked before emitting
+	     * and before `shouldEmit`. The arguments are the ones that the action
+	     * is invoked with. If this function returns something other than
+	     * undefined, that will be passed on as arguments for shouldEmit and
+	     * emission.
+	     */
+	    preEmit: function preEmit() {},
+
+	    /**
+	     * Hook used by the publisher after `preEmit` to determine if the
+	     * event should be emitted with given arguments. This may be overridden
+	     * in your application, default implementation always returns true.
+	     *
+	     * @returns {Boolean} true if event should be emitted
+	     */
+	    shouldEmit: function shouldEmit() {
+	        return true;
+	    },
+
+	    /**
+	     * Subscribes the given callback for action triggered
+	     *
+	     * @param {Function} callback The callback to register as event handler
+	     * @param {Mixed} [optional] bindContext The context to bind the callback with
+	     * @returns {Function} Callback that unsubscribes the registered event handler
+	     */
+	    listen: function listen(callback, bindContext) {
+	        bindContext = bindContext || this;
+	        var eventHandler = function eventHandler(args) {
+	            if (aborted) {
+	                return;
+	            }
+	            callback.apply(bindContext, args);
+	        },
+	            me = this,
+	            aborted = false;
+	        this.emitter.addListener(this.eventLabel, eventHandler);
+	        return function () {
+	            aborted = true;
+	            me.emitter.removeListener(me.eventLabel, eventHandler);
+	        };
+	    },
+
+	    /**
+	     * Publishes an event using `this.emitter` (if `shouldEmit` agrees)
+	     */
+	    trigger: function trigger() {
+	        var args = arguments,
+	            pre = this.preEmit.apply(this, args);
+	        args = pre === undefined ? args : _.isArguments(pre) ? pre : [].concat(pre);
+	        if (this.shouldEmit.apply(this, args)) {
+	            this.emitter.emit(this.eventLabel, args);
+	        }
+	    },
+
+	    /**
+	     * Tries to publish the event on the next tick
+	     */
+	    triggerAsync: function triggerAsync() {
+	        var args = arguments,
+	            me = this;
+	        _.nextTick(function () {
+	            me.trigger.apply(me, args);
+	        });
+	    },
+
+	    /**
+	     * Wraps the trigger mechanism with a deferral function.
+	     *
+	     * @param {Function} callback the deferral function,
+	     *        first argument is the resolving function and the
+	     *        rest are the arguments provided from the previous
+	     *        trigger invocation
+	     */
+	    deferWith: function deferWith(callback) {
+	        var oldTrigger = this.trigger,
+	            ctx = this,
+	            resolver = function resolver() {
+	            oldTrigger.apply(ctx, arguments);
+	        };
+	        this.trigger = function () {
+	            callback.apply(ctx, [resolver].concat([].splice.call(arguments, 0)));
+	        };
+	    }
+
+	};
+
+/***/ },
+/* 291 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _ = __webpack_require__(282),
+	    ActionMethods = __webpack_require__(280),
+	    PublisherMethods = __webpack_require__(290),
+	    Keep = __webpack_require__(286);
+
+	var allowed = { preEmit: 1, shouldEmit: 1 };
+
+	/**
+	 * Creates an action functor object. It is mixed in with functions
+	 * from the `PublisherMethods` mixin. `preEmit` and `shouldEmit` may
+	 * be overridden in the definition object.
+	 *
+	 * @param {Object} definition The action object definition
+	 */
+	var createAction = function createAction(definition) {
+
+	    definition = definition || {};
+	    if (!_.isObject(definition)) {
+	        definition = { actionName: definition };
+	    }
+
+	    for (var a in ActionMethods) {
+	        if (!allowed[a] && PublisherMethods[a]) {
+	            throw new Error("Cannot override API method " + a + " in Reflux.ActionMethods. Use another method name or override it on Reflux.PublisherMethods instead.");
+	        }
+	    }
+
+	    for (var d in definition) {
+	        if (!allowed[d] && PublisherMethods[d]) {
+	            throw new Error("Cannot override API method " + d + " in action creation. Use another method name or override it on Reflux.PublisherMethods instead.");
+	        }
+	    }
+
+	    definition.children = definition.children || [];
+	    if (definition.asyncResult) {
+	        definition.children = definition.children.concat(["completed", "failed"]);
+	    }
+
+	    var i = 0,
+	        childActions = {};
+	    for (; i < definition.children.length; i++) {
+	        var name = definition.children[i];
+	        childActions[name] = createAction(name);
+	    }
+
+	    var context = _.extend({
+	        eventLabel: "action",
+	        emitter: new _.EventEmitter(),
+	        _isAction: true
+	    }, PublisherMethods, ActionMethods, definition);
+
+	    var functor = function functor() {
+	        var triggerType = functor.sync ? "trigger" : "triggerAsync";
+	        return functor[triggerType].apply(functor, arguments);
+	    };
+
+	    _.extend(functor, childActions, context);
+
+	    Keep.createdActions.push(functor);
+
+	    return functor;
+	};
+
+	module.exports = createAction;
+
+/***/ },
+/* 292 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ListenerMethods = __webpack_require__(281),
+	    ListenerMixin = __webpack_require__(293),
+	    _ = __webpack_require__(282);
+
+	module.exports = function(listenable,key){
+	    return {
+	        getInitialState: function(){
+	            if (!_.isFunction(listenable.getInitialState)) {
+	                return {};
+	            } else if (key === undefined) {
+	                return listenable.getInitialState();
+	            } else {
+	                return _.object([key],[listenable.getInitialState()]);
+	            }
+	        },
+	        componentDidMount: function(){
+	            _.extend(this,ListenerMethods);
+	            var me = this, cb = (key === undefined ? this.setState : function(v){
+	                if (typeof me.isMounted === "undefined" || me.isMounted() === true) {
+	                    me.setState(_.object([key],[v]));
+	                }
+	            });
+	            this.listenTo(listenable,cb);
+	        },
+	        componentWillUnmount: ListenerMixin.componentWillUnmount
+	    };
+	};
+
+
+/***/ },
+/* 293 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(282),
+	    ListenerMethods = __webpack_require__(281);
+
+	/**
+	 * A module meant to be consumed as a mixin by a React component. Supplies the methods from
+	 * `ListenerMethods` mixin and takes care of teardown of subscriptions.
+	 * Note that if you're using the `connect` mixin you don't need this mixin, as connect will
+	 * import everything this mixin contains!
+	 */
+	module.exports = _.extend({
+
+	    /**
+	     * Cleans up all listener previously registered.
+	     */
+	    componentWillUnmount: ListenerMethods.stopListeningToAll
+
+	}, ListenerMethods);
+
+
+/***/ },
+/* 294 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ListenerMethods = __webpack_require__(281),
+	    ListenerMixin = __webpack_require__(293),
+	    _ = __webpack_require__(282);
+
+	module.exports = function(listenable, key, filterFunc) {
+	    filterFunc = _.isFunction(key) ? key : filterFunc;
+	    return {
+	        getInitialState: function() {
+	            if (!_.isFunction(listenable.getInitialState)) {
+	                return {};
+	            } else if (_.isFunction(key)) {
+	                return filterFunc.call(this, listenable.getInitialState());
+	            } else {
+	                // Filter initial payload from store.
+	                var result = filterFunc.call(this, listenable.getInitialState());
+	                if (typeof(result) !== "undefined") {
+	                    return _.object([key], [result]);
+	                } else {
+	                    return {};
+	                }
+	            }
+	        },
+	        componentDidMount: function() {
+	            _.extend(this, ListenerMethods);
+	            var me = this;
+	            var cb = function(value) {
+	                if (_.isFunction(key)) {
+	                    me.setState(filterFunc.call(me, value));
+	                } else {
+	                    var result = filterFunc.call(me, value);
+	                    me.setState(_.object([key], [result]));
+	                }
+	            };
+
+	            this.listenTo(listenable, cb);
+	        },
+	        componentWillUnmount: ListenerMixin.componentWillUnmount
+	    };
+	};
+
+
+
+/***/ },
+/* 295 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ListenerMethods = __webpack_require__(281);
+
+	/**
+	 * A mixin factory for a React component. Meant as a more convenient way of using the `ListenerMixin`,
+	 * without having to manually set listeners in the `componentDidMount` method.
+	 *
+	 * @param {Action|Store} listenable An Action or Store that should be
+	 *  listened to.
+	 * @param {Function|String} callback The callback to register as event handler
+	 * @param {Function|String} defaultCallback The callback to register as default handler
+	 * @returns {Object} An object to be used as a mixin, which sets up the listener for the given listenable.
+	 */
+	module.exports = function(listenable,callback,initial){
+	    return {
+	        /**
+	         * Set up the mixin before the initial rendering occurs. Import methods from `ListenerMethods`
+	         * and then make the call to `listenTo` with the arguments provided to the factory function
+	         */
+	        componentDidMount: function() {
+	            for(var m in ListenerMethods){
+	                if (this[m] !== ListenerMethods[m]){
+	                    if (this[m]){
+	                        throw "Can't have other property '"+m+"' when using Reflux.listenTo!";
+	                    }
+	                    this[m] = ListenerMethods[m];
+	                }
+	            }
+	            this.listenTo(listenable,callback,initial);
+	        },
+	        /**
+	         * Cleans up all listener previously registered.
+	         */
+	        componentWillUnmount: ListenerMethods.stopListeningToAll
+	    };
+	};
+
+
+/***/ },
+/* 296 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ListenerMethods = __webpack_require__(281);
+
+	/**
+	 * A mixin factory for a React component. Meant as a more convenient way of using the `listenerMixin`,
+	 * without having to manually set listeners in the `componentDidMount` method. This version is used
+	 * to automatically set up a `listenToMany` call.
+	 *
+	 * @param {Object} listenables An object of listenables
+	 * @returns {Object} An object to be used as a mixin, which sets up the listeners for the given listenables.
+	 */
+	module.exports = function(listenables){
+	    return {
+	        /**
+	         * Set up the mixin before the initial rendering occurs. Import methods from `ListenerMethods`
+	         * and then make the call to `listenTo` with the arguments provided to the factory function
+	         */
+	        componentDidMount: function() {
+	            for(var m in ListenerMethods){
+	                if (this[m] !== ListenerMethods[m]){
+	                    if (this[m]){
+	                        throw "Can't have other property '"+m+"' when using Reflux.listenToMany!";
+	                    }
+	                    this[m] = ListenerMethods[m];
+	                }
+	            }
+	            this.listenToMany(listenables);
+	        },
+	        /**
+	         * Cleans up all listener previously registered.
+	         */
+	        componentWillUnmount: ListenerMethods.stopListeningToAll
+	    };
+	};
+
+
+/***/ },
+/* 297 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin = __webpack_require__(298);
+	var assign = __webpack_require__(299);
+
+	var mixinProto = mixin({
+	  // lifecycle stuff is as you'd expect
+	  componentDidMount: mixin.MANY,
+	  componentWillMount: mixin.MANY,
+	  componentWillReceiveProps: mixin.MANY,
+	  shouldComponentUpdate: mixin.ONCE,
+	  componentWillUpdate: mixin.MANY,
+	  componentDidUpdate: mixin.MANY,
+	  componentWillUnmount: mixin.MANY,
+	  getChildContext: mixin.MANY_MERGED
+	});
+
+	function setDefaultProps(reactMixin) {
+	  var getDefaultProps = reactMixin.getDefaultProps;
+
+	  if (getDefaultProps) {
+	    reactMixin.defaultProps = getDefaultProps();
+
+	    delete reactMixin.getDefaultProps;
+	  }
+	}
+
+	function setInitialState(reactMixin) {
+	  var getInitialState = reactMixin.getInitialState;
+	  var componentWillMount = reactMixin.componentWillMount;
+
+	  function applyInitialState(instance) {
+	    var state = instance.state || {};
+	    assign(state, getInitialState.call(instance));
+	    instance.state = state;
+	  }
+
+	  if (getInitialState) {
+	    if (!componentWillMount) {
+	      reactMixin.componentWillMount = function() {
+	        applyInitialState(this);
+	      };
+	    } else {
+	      reactMixin.componentWillMount = function() {
+	        applyInitialState(this);
+	        componentWillMount.call(this);
+	      };
+	    }
+
+	    delete reactMixin.getInitialState;
+	  }
+	}
+
+	function mixinClass(reactClass, reactMixin) {
+	  setDefaultProps(reactMixin);
+	  setInitialState(reactMixin);
+
+	  var prototypeMethods = {};
+	  var staticProps = {};
+
+	  Object.keys(reactMixin).forEach(function(key) {
+	    if (key === 'mixins') {
+	      return; // Handled below to ensure proper order regardless of property iteration order
+	    }
+	    if (key === 'statics') {
+	      return; // gets special handling
+	    } else if (typeof reactMixin[key] === 'function') {
+	      prototypeMethods[key] = reactMixin[key];
+	    } else {
+	      staticProps[key] = reactMixin[key];
+	    }
+	  });
+
+	  mixinProto(reactClass.prototype, prototypeMethods);
+
+	  var mergePropTypes = function(left, right, key) {
+	    if (!left) return right;
+	    if (!right) return left;
+
+	    var result = {};
+	    Object.keys(left).forEach(function(leftKey) {
+	      if (!right[leftKey]) {
+	        result[leftKey] = left[leftKey];
+	      }
+	    });
+
+	    Object.keys(right).forEach(function(rightKey) {
+	      if (left[rightKey]) {
+	        result[rightKey] = function checkBothContextTypes() {
+	          return right[rightKey].apply(this, arguments) && left[rightKey].apply(this, arguments);
+	        };
+	      } else {
+	        result[rightKey] = right[rightKey];
+	      }
+	    });
+
+	    return result;
+	  };
+
+	  mixin({
+	    childContextTypes: mergePropTypes,
+	    contextTypes: mergePropTypes,
+	    propTypes: mixin.MANY_MERGED_LOOSE,
+	    defaultProps: mixin.MANY_MERGED_LOOSE
+	  })(reactClass, staticProps);
+
+	  // statics is a special case because it merges directly onto the class
+	  if (reactMixin.statics) {
+	    Object.getOwnPropertyNames(reactMixin.statics).forEach(function(key) {
+	      var left = reactClass[key];
+	      var right = reactMixin.statics[key];
+
+	      if (left !== undefined && right !== undefined) {
+	        throw new TypeError('Cannot mixin statics because statics.' + key + ' and Component.' + key + ' are defined.');
+	      }
+
+	      reactClass[key] = left !== undefined ? left : right;
+	    });
+	  }
+
+	  // If more mixins are defined, they need to run. This emulate's react's behavior.
+	  // See behavior in code at:
+	  // https://github.com/facebook/react/blob/41aa3496aa632634f650edbe10d617799922d265/src/isomorphic/classic/class/ReactClass.js#L468
+	  // Note the .reverse(). In React, a fresh constructor is created, then all mixins are mixed in recursively,
+	  // then the actual spec is mixed in last.
+	  //
+	  // With ES6 classes, the properties are already there, so smart-mixin mixes functions (a, b) -> b()a(), which is
+	  // the opposite of how React does it. If we reverse this array, we basically do the whole logic in reverse,
+	  // which makes the result the same. See the test for more.
+	  // See also:
+	  // https://github.com/facebook/react/blob/41aa3496aa632634f650edbe10d617799922d265/src/isomorphic/classic/class/ReactClass.js#L853
+	  if (reactMixin.mixins) {
+	    reactMixin.mixins.reverse().forEach(mixinClass.bind(null, reactClass));
+	  }
+
+	  return reactClass;
+	}
+
+	module.exports = (function() {
+	  var reactMixin = mixinProto;
+
+	  reactMixin.onClass = function(reactClass, mixin) {
+	    var mixinClone = assign({}, mixin);
+	    return mixinClass(reactClass, mixinClone);
+	  };
+
+	  reactMixin.decorate = function(mixin) {
+	    return function(reactClass) {
+	      // Clone the incoming class
+	      var newClass = function(props) {
+	        reactClass.apply(this, arguments);
+	      };
+	      // Collect static properties
+	      var statics = {};
+	      for (var key in reactClass) {
+	        // Ordinarily, you'd use reactClass.hasOwnProperty(key) here
+	        // But we want to catch ALL static properties
+	        if (!Function.prototype[key]) {
+	          statics[key] = reactClass[key];
+	        }
+	      }
+	      assign(newClass, statics);
+	      newClass.prototype = Object.create(reactClass.prototype, {
+	          constructor: {
+	              value: newClass,
+	              enumerable: false,
+	              writable: true,
+	              configurable: true
+	          }
+	      });
+	      return reactMixin.onClass(newClass, mixin);
+	    };
+	  };
+
+	  return reactMixin;
+	})();
+
+
+/***/ },
+/* 298 */
+/***/ function(module, exports) {
+
+	var objToStr = function(x){ return Object.prototype.toString.call(x); };
+
+	var thrower = function(error){
+	    throw error;
+	};
+
+	var mixins = module.exports = function makeMixinFunction(rules, _opts){
+	    var opts = _opts || {};
+	    if (!opts.unknownFunction) {
+	        opts.unknownFunction = mixins.ONCE;
+	    }
+
+	    if (!opts.nonFunctionProperty) {
+	        opts.nonFunctionProperty = function(left, right, key){
+	            if (left !== undefined && right !== undefined) {
+	                var getTypeName = function(obj){
+	                    if (obj && obj.constructor && obj.constructor.name) {
+	                        return obj.constructor.name;
+	                    }
+	                    else {
+	                        return objToStr(obj).slice(8, -1);
+	                    }
+	                };
+	                throw new TypeError('Cannot mixin key ' + key + ' because it is provided by multiple sources, '
+	                        + 'and the types are ' + getTypeName(left) + ' and ' + getTypeName(right));
+	            }
+	            return left === undefined ? right : left;
+	        };
+	    }
+
+	    function setNonEnumerable(target, key, value){
+	        if (key in target){
+	            target[key] = value;
+	        }
+	        else {
+	            Object.defineProperty(target, key, {
+	                value: value,
+	                writable: true,
+	                configurable: true
+	            });
+	        }
+	    }
+
+	    return function applyMixin(source, mixin){
+	        Object.keys(mixin).forEach(function(key){
+	            var left = source[key], right = mixin[key], rule = rules[key];
+
+	            // this is just a weird case where the key was defined, but there's no value
+	            // behave like the key wasn't defined
+	            if (left === undefined && right === undefined) return;
+
+	            var wrapIfFunction = function(thing){
+	                return typeof thing !== "function" ? thing
+	                : function(){
+	                    return thing.call(this, arguments);
+	                };
+	            };
+
+	            // do we have a rule for this key?
+	            if (rule) {
+	                // may throw here
+	                var fn = rule(left, right, key);
+	                setNonEnumerable(source, key, wrapIfFunction(fn));
+	                return;
+	            }
+
+	            var leftIsFn = typeof left === "function";
+	            var rightIsFn = typeof right === "function";
+
+	            // check to see if they're some combination of functions or undefined
+	            // we already know there's no rule, so use the unknown function behavior
+	            if (leftIsFn && right === undefined
+	             || rightIsFn && left === undefined
+	             || leftIsFn && rightIsFn) {
+	                // may throw, the default is ONCE so if both are functions
+	                // the default is to throw
+	                setNonEnumerable(source, key, wrapIfFunction(opts.unknownFunction(left, right, key)));
+	                return;
+	            }
+
+	            // we have no rule for them, one may be a function but one or both aren't
+	            // our default is MANY_MERGED_LOOSE which will merge objects, concat arrays
+	            // and throw if there's a type mismatch or both are primitives (how do you merge 3, and "foo"?)
+	            source[key] = opts.nonFunctionProperty(left, right, key);
+	        });
+	    };
+	};
+
+	mixins._mergeObjects = function(obj1, obj2) {
+	    var assertObject = function(obj, obj2){
+	        var type = objToStr(obj);
+	        if (type !== '[object Object]') {
+	            var displayType = obj.constructor ? obj.constructor.name : 'Unknown';
+	            var displayType2 = obj2.constructor ? obj2.constructor.name : 'Unknown';
+	            thrower('cannot merge returned value of type ' + displayType + ' with an ' + displayType2);
+	        }
+	    };
+
+	    if (Array.isArray(obj1) && Array.isArray(obj2)) {
+	        return obj1.concat(obj2);
+	    }
+
+	    assertObject(obj1, obj2);
+	    assertObject(obj2, obj1);
+
+	    var result = {};
+	    Object.keys(obj1).forEach(function(k){
+	        if (Object.prototype.hasOwnProperty.call(obj2, k)) {
+	            thrower('cannot merge returns because both have the ' + JSON.stringify(k) + ' key');
+	        }
+	        result[k] = obj1[k];
+	    });
+
+	    Object.keys(obj2).forEach(function(k){
+	        // we can skip the conflict check because all conflicts would already be found
+	        result[k] = obj2[k];
+	    });
+	    return result;
+
+	}
+
+	// define our built-in mixin types
+	mixins.ONCE = function(left, right, key){
+	    if (left && right) {
+	        throw new TypeError('Cannot mixin ' + key + ' because it has a unique constraint.');
+	    }
+
+	    var fn = left || right;
+
+	    return function(args){
+	        return fn.apply(this, args);
+	    };
+	};
+
+	mixins.MANY = function(left, right, key){
+	    return function(args){
+	        if (right) right.apply(this, args);
+	        return left ? left.apply(this, args) : undefined;
+	    };
+	};
+
+	mixins.MANY_MERGED_LOOSE = function(left, right, key) {
+	    if(left && right) {
+	        return mixins._mergeObjects(left, right);
+	    }
+
+	    return left || right;
+	}
+
+	mixins.MANY_MERGED = function(left, right, key){
+	    return function(args){
+	        var res1 = right && right.apply(this, args);
+	        var res2 = left && left.apply(this, args);
+	        if (res1 && res2) {
+	            return mixins._mergeObjects(res1, res2)
+	        }
+	        return res2 || res1;
+	    };
+	};
+
+
+	mixins.REDUCE_LEFT = function(_left, _right, key){
+	    var left = _left || function(x){ return x };
+	    var right = _right || function(x){ return x };
+	    return function(args){
+	        return right.call(this, left.apply(this, args));
+	    };
+	};
+
+	mixins.REDUCE_RIGHT = function(_left, _right, key){
+	    var left = _left || function(x){ return x };
+	    var right = _right || function(x){ return x };
+	    return function(args){
+	        return left.call(this, right.apply(this, args));
+	    };
+	};
+
+
+
+/***/ },
+/* 299 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 300 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _reflux = __webpack_require__(278);
+
+	var _reflux2 = _interopRequireDefault(_reflux);
+
+	var _actions = __webpack_require__(301);
+
+	var _actions2 = _interopRequireDefault(_actions);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Store = _reflux2.default.createStore({
+	  listenables: [_actions2.default],
+	  getInitialState: function getInitialState() {
+	    this.gameScreen = '';
+	  },
+	  onEmuUpdateScreen: function onEmuUpdateScreen(imageData) {
+	    this.gameScreen = imageData;
+	    this.trigger(this.gameScreen);
+	  },
+	  onEmuKeyPress: function onEmuKeyPress() {},
+	  onEmuKeyDepress: function onEmuKeyDepress() {},
+	  onEmuSelectController: function onEmuSelectController() {},
+	  getInitialState: function getInitialState() {}
+	});
+
+	exports.default = Store;
+
+/***/ },
+/* 301 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _reflux = __webpack_require__(278);
+
+	var _reflux2 = _interopRequireDefault(_reflux);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Actions = _reflux2.default.createActions(["emuUpdateScreen", "emuKeyPress", "emuKeyDepress", "emuSelectController"]);
+
+	exports.default = Actions;
+
+/***/ },
+/* 302 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var defaultClickRejectionStrategy = __webpack_require__(303);
+
+	module.exports = function injectTapEventPlugin (strategyOverrides) {
+	  strategyOverrides = strategyOverrides || {}
+	  var shouldRejectClick = strategyOverrides.shouldRejectClick || defaultClickRejectionStrategy;
+
+	  __webpack_require__(35).injection.injectEventPluginsByName({
+	    "TapEventPlugin":       __webpack_require__(304)(shouldRejectClick)
+	  });
+	};
+
+
+/***/ },
+/* 303 */
+/***/ function(module, exports) {
+
+	module.exports = function(lastTouchEvent, clickTimestamp) {
+	  if (lastTouchEvent && (clickTimestamp - lastTouchEvent) < 750) {
+	    return true;
+	  }
+	};
+
+
+/***/ },
+/* 304 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-2014 Facebook, Inc.
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 *
+	 * @providesModule TapEventPlugin
+	 * @typechecks static-only
+	 */
+
+	"use strict";
+
+	var EventConstants = __webpack_require__(34);
+	var EventPluginUtils = __webpack_require__(37);
+	var EventPropagators = __webpack_require__(77);
+	var SyntheticUIEvent = __webpack_require__(91);
+	var TouchEventUtils = __webpack_require__(305);
+	var ViewportMetrics = __webpack_require__(42);
+
+	var keyOf = __webpack_require__(306);
+	var topLevelTypes = EventConstants.topLevelTypes;
+
+	var isStartish = EventPluginUtils.isStartish;
+	var isEndish = EventPluginUtils.isEndish;
+
+	var isTouch = function(topLevelType) {
+	  var touchTypes = [
+	    topLevelTypes.topTouchCancel,
+	    topLevelTypes.topTouchEnd,
+	    topLevelTypes.topTouchStart,
+	    topLevelTypes.topTouchMove
+	  ];
+	  return touchTypes.indexOf(topLevelType) >= 0;
+	}
+
+	/**
+	 * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
+	 * in order to still be considered a 'tap' event.
+	 */
+	var tapMoveThreshold = 10;
+	var ignoreMouseThreshold = 750;
+	var startCoords = {x: null, y: null};
+	var lastTouchEvent = null;
+
+	var Axis = {
+	  x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
+	  y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'}
+	};
+
+	function getAxisCoordOfEvent(axis, nativeEvent) {
+	  var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+	  if (singleTouch) {
+	    return singleTouch[axis.page];
+	  }
+	  return axis.page in nativeEvent ?
+	    nativeEvent[axis.page] :
+	    nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
+	}
+
+	function getDistance(coords, nativeEvent) {
+	  var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
+	  var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
+	  return Math.pow(
+	    Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
+	    0.5
+	  );
+	}
+
+	var touchEvents = [
+	  topLevelTypes.topTouchStart,
+	  topLevelTypes.topTouchCancel,
+	  topLevelTypes.topTouchEnd,
+	  topLevelTypes.topTouchMove,
+	];
+
+	var dependencies = [
+	  topLevelTypes.topMouseDown,
+	  topLevelTypes.topMouseMove,
+	  topLevelTypes.topMouseUp,
+	].concat(touchEvents);
+
+	var eventTypes = {
+	  touchTap: {
+	    phasedRegistrationNames: {
+	      bubbled: keyOf({onTouchTap: null}),
+	      captured: keyOf({onTouchTapCapture: null})
+	    },
+	    dependencies: dependencies
+	  }
+	};
+
+	var now = (function() {
+	  if (Date.now) {
+	    return Date.now;
+	  } else {
+	    // IE8 support: http://stackoverflow.com/questions/9430357/please-explain-why-and-how-new-date-works-as-workaround-for-date-now-in
+	    return function () {
+	      return +new Date;
+	    }
+	  }
+	})();
+
+	function createTapEventPlugin(shouldRejectClick) {
+	  return {
+
+	    tapMoveThreshold: tapMoveThreshold,
+
+	    ignoreMouseThreshold: ignoreMouseThreshold,
+
+	    eventTypes: eventTypes,
+
+	    /**
+	     * @param {string} topLevelType Record from `EventConstants`.
+	     * @param {DOMEventTarget} topLevelTarget The listening component root node.
+	     * @param {string} topLevelTargetID ID of `topLevelTarget`.
+	     * @param {object} nativeEvent Native browser event.
+	     * @return {*} An accumulation of synthetic events.
+	     * @see {EventPluginHub.extractEvents}
+	     */
+	    extractEvents: function(
+	        topLevelType,
+	        topLevelTarget,
+	        topLevelTargetID,
+	        nativeEvent,
+	        nativeEventTarget) {
+
+	      if (isTouch(topLevelType)) {
+	        lastTouchEvent = now();
+	      } else {
+	        if (shouldRejectClick(lastTouchEvent, now())) {
+	          return null;
+	        }
+	      }
+
+	      if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
+	        return null;
+	      }
+	      var event = null;
+	      var distance = getDistance(startCoords, nativeEvent);
+	      if (isEndish(topLevelType) && distance < tapMoveThreshold) {
+	        event = SyntheticUIEvent.getPooled(
+	          eventTypes.touchTap,
+	          topLevelTargetID,
+	          nativeEvent,
+	          nativeEventTarget
+	        );
+	      }
+	      if (isStartish(topLevelType)) {
+	        startCoords.x = getAxisCoordOfEvent(Axis.x, nativeEvent);
+	        startCoords.y = getAxisCoordOfEvent(Axis.y, nativeEvent);
+	      } else if (isEndish(topLevelType)) {
+	        startCoords.x = 0;
+	        startCoords.y = 0;
+	      }
+	      EventPropagators.accumulateTwoPhaseDispatches(event);
+	      return event;
+	    }
+
+	  };
+	}
+
+	module.exports = createTapEventPlugin;
+
+
+/***/ },
+/* 305 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2013-2014 Facebook, Inc.
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 *
+	 * @providesModule TouchEventUtils
+	 */
+
+	var TouchEventUtils = {
+	  /**
+	   * Utility function for common case of extracting out the primary touch from a
+	   * touch event.
+	   * - `touchEnd` events usually do not have the `touches` property.
+	   *   http://stackoverflow.com/questions/3666929/
+	   *   mobile-sarai-touchend-event-not-firing-when-last-touch-is-removed
+	   *
+	   * @param {Event} nativeEvent Native event that may or may not be a touch.
+	   * @return {TouchesObject?} an object with pageX and pageY or null.
+	   */
+	  extractSingleTouch: function(nativeEvent) {
+	    var touches = nativeEvent.touches;
+	    var changedTouches = nativeEvent.changedTouches;
+	    var hasTouches = touches && touches.length > 0;
+	    var hasChangedTouches = changedTouches && changedTouches.length > 0;
+
+	    return !hasTouches && hasChangedTouches ? changedTouches[0] :
+	           hasTouches ? touches[0] :
+	           nativeEvent;
+	  }
+	};
+
+	module.exports = TouchEventUtils;
+
+
+/***/ },
+/* 306 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule keyOf
+	 */
+
+	/**
+	 * Allows extraction of a minified key. Let's the build system minify keys
+	 * without losing the ability to dynamically use key strings as values
+	 * themselves. Pass in an object with a single key/val pair and it will return
+	 * you the string key of that single record. Suppose you want to grab the
+	 * value for a key 'className' inside of an object. Key/val minification may
+	 * have aliased that key to be 'xa12'. keyOf({className: null}) will return
+	 * 'xa12' in that case. Resolve keys you want to use once at startup time, then
+	 * reuse those resolutions.
+	 */
+	"use strict";
+
+	var keyOf = function (oneKeyObj) {
+	  var key;
+	  for (key in oneKeyObj) {
+	    if (!oneKeyObj.hasOwnProperty(key)) {
+	      continue;
+	    }
+	    return key;
+	  }
+	  return null;
+	};
+
+	module.exports = keyOf;
+
+/***/ },
+/* 307 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _emu = __webpack_require__(300);
+
+	var _emu2 = _interopRequireDefault(_emu);
+
+	var _actions = __webpack_require__(301);
+
+	var _actions2 = _interopRequireDefault(_actions);
+
+	var _socket = __webpack_require__(308);
+
+	var _socket2 = _interopRequireDefault(_socket);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var socket = _socket2.default.connect('http://socket.fattle.online/');
+	socket.on('screen', function (screen) {
+	  var blob = new Blob([screen], { type: 'image/png' });
+	  var imageData = URL.createObjectURL(blob);
+	  _actions2.default.emuUpdateScreen(imageData);
+	});
+
+/***/ },
+/* 308 */
+/***/ function(module, exports, __webpack_require__) {
+
 	
 	/**
 	 * Module dependencies.
 	 */
 
-	var url = __webpack_require__(279);
-	var parser = __webpack_require__(284);
-	var Manager = __webpack_require__(292);
-	var debug = __webpack_require__(281)('socket.io-client');
+	var url = __webpack_require__(309);
+	var parser = __webpack_require__(314);
+	var Manager = __webpack_require__(322);
+	var debug = __webpack_require__(311)('socket.io-client');
 
 	/**
 	 * Module exports.
@@ -35599,12 +37794,12 @@
 	 * @api public
 	 */
 
-	exports.Manager = __webpack_require__(292);
-	exports.Socket = __webpack_require__(320);
+	exports.Manager = __webpack_require__(322);
+	exports.Socket = __webpack_require__(350);
 
 
 /***/ },
-/* 279 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -35612,8 +37807,8 @@
 	 * Module dependencies.
 	 */
 
-	var parseuri = __webpack_require__(280);
-	var debug = __webpack_require__(281)('socket.io-client:url');
+	var parseuri = __webpack_require__(310);
+	var debug = __webpack_require__(311)('socket.io-client:url');
 
 	/**
 	 * Module exports.
@@ -35687,7 +37882,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 280 */
+/* 310 */
 /***/ function(module, exports) {
 
 	/**
@@ -35732,7 +37927,7 @@
 
 
 /***/ },
-/* 281 */
+/* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -35742,7 +37937,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(282);
+	exports = module.exports = __webpack_require__(312);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -35906,7 +38101,7 @@
 
 
 /***/ },
-/* 282 */
+/* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -35922,7 +38117,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(283);
+	exports.humanize = __webpack_require__(313);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -36109,7 +38304,7 @@
 
 
 /***/ },
-/* 283 */
+/* 313 */
 /***/ function(module, exports) {
 
 	/**
@@ -36240,7 +38435,7 @@
 
 
 /***/ },
-/* 284 */
+/* 314 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -36248,12 +38443,12 @@
 	 * Module dependencies.
 	 */
 
-	var debug = __webpack_require__(281)('socket.io-parser');
-	var json = __webpack_require__(285);
-	var isArray = __webpack_require__(288);
-	var Emitter = __webpack_require__(289);
-	var binary = __webpack_require__(290);
-	var isBuf = __webpack_require__(291);
+	var debug = __webpack_require__(311)('socket.io-parser');
+	var json = __webpack_require__(315);
+	var isArray = __webpack_require__(318);
+	var Emitter = __webpack_require__(319);
+	var binary = __webpack_require__(320);
+	var isBuf = __webpack_require__(321);
 
 	/**
 	 * Protocol version.
@@ -36646,14 +38841,14 @@
 
 
 /***/ },
-/* 285 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 	;(function () {
 	  // Detect the `define` function exposed by asynchronous module loaders. The
 	  // strict `define` check is necessary for compatibility with `r.js`.
-	  var isLoader = "function" === "function" && __webpack_require__(287);
+	  var isLoader = "function" === "function" && __webpack_require__(317);
 
 	  // A set of types used to distinguish objects from primitives.
 	  var objectTypes = {
@@ -37552,10 +39747,10 @@
 	  }
 	}).call(this);
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(286)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(316)(module), (function() { return this; }())))
 
 /***/ },
-/* 286 */
+/* 316 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -37571,7 +39766,7 @@
 
 
 /***/ },
-/* 287 */
+/* 317 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -37579,7 +39774,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 288 */
+/* 318 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -37588,7 +39783,7 @@
 
 
 /***/ },
-/* 289 */
+/* 319 */
 /***/ function(module, exports) {
 
 	
@@ -37758,7 +39953,7 @@
 
 
 /***/ },
-/* 290 */
+/* 320 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*global Blob,File*/
@@ -37767,8 +39962,8 @@
 	 * Module requirements
 	 */
 
-	var isArray = __webpack_require__(288);
-	var isBuf = __webpack_require__(291);
+	var isArray = __webpack_require__(318);
+	var isBuf = __webpack_require__(321);
 
 	/**
 	 * Replaces every Buffer | ArrayBuffer in packet with a numbered placeholder.
@@ -37906,7 +40101,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 291 */
+/* 321 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -37926,7 +40121,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 292 */
+/* 322 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -37934,15 +40129,15 @@
 	 * Module dependencies.
 	 */
 
-	var eio = __webpack_require__(293);
-	var Socket = __webpack_require__(320);
-	var Emitter = __webpack_require__(321);
-	var parser = __webpack_require__(284);
-	var on = __webpack_require__(323);
-	var bind = __webpack_require__(324);
-	var debug = __webpack_require__(281)('socket.io-client:manager');
-	var indexOf = __webpack_require__(318);
-	var Backoff = __webpack_require__(327);
+	var eio = __webpack_require__(323);
+	var Socket = __webpack_require__(350);
+	var Emitter = __webpack_require__(351);
+	var parser = __webpack_require__(314);
+	var on = __webpack_require__(353);
+	var bind = __webpack_require__(354);
+	var debug = __webpack_require__(311)('socket.io-client:manager');
+	var indexOf = __webpack_require__(348);
+	var Backoff = __webpack_require__(357);
 
 	/**
 	 * IE6+ hasOwnProperty
@@ -38489,19 +40684,19 @@
 
 
 /***/ },
-/* 293 */
+/* 323 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports =  __webpack_require__(294);
+	module.exports =  __webpack_require__(324);
 
 
 /***/ },
-/* 294 */
+/* 324 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports = __webpack_require__(295);
+	module.exports = __webpack_require__(325);
 
 	/**
 	 * Exports parser
@@ -38509,25 +40704,25 @@
 	 * @api public
 	 *
 	 */
-	module.exports.parser = __webpack_require__(302);
+	module.exports.parser = __webpack_require__(332);
 
 
 /***/ },
-/* 295 */
+/* 325 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var transports = __webpack_require__(296);
-	var Emitter = __webpack_require__(311);
-	var debug = __webpack_require__(281)('engine.io-client:socket');
-	var index = __webpack_require__(318);
-	var parser = __webpack_require__(302);
-	var parseuri = __webpack_require__(280);
-	var parsejson = __webpack_require__(319);
-	var parseqs = __webpack_require__(312);
+	var transports = __webpack_require__(326);
+	var Emitter = __webpack_require__(341);
+	var debug = __webpack_require__(311)('engine.io-client:socket');
+	var index = __webpack_require__(348);
+	var parser = __webpack_require__(332);
+	var parseuri = __webpack_require__(310);
+	var parsejson = __webpack_require__(349);
+	var parseqs = __webpack_require__(342);
 
 	/**
 	 * Module exports.
@@ -38651,9 +40846,9 @@
 	 */
 
 	Socket.Socket = Socket;
-	Socket.Transport = __webpack_require__(301);
-	Socket.transports = __webpack_require__(296);
-	Socket.parser = __webpack_require__(302);
+	Socket.Transport = __webpack_require__(331);
+	Socket.transports = __webpack_require__(326);
+	Socket.parser = __webpack_require__(332);
 
 	/**
 	 * Creates transport of the given type.
@@ -39248,17 +41443,17 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 296 */
+/* 326 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies
 	 */
 
-	var XMLHttpRequest = __webpack_require__(297);
-	var XHR = __webpack_require__(299);
-	var JSONP = __webpack_require__(315);
-	var websocket = __webpack_require__(316);
+	var XMLHttpRequest = __webpack_require__(327);
+	var XHR = __webpack_require__(329);
+	var JSONP = __webpack_require__(345);
+	var websocket = __webpack_require__(346);
 
 	/**
 	 * Export transports.
@@ -39308,11 +41503,11 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 297 */
+/* 327 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// browser shim for xmlhttprequest module
-	var hasCORS = __webpack_require__(298);
+	var hasCORS = __webpack_require__(328);
 
 	module.exports = function(opts) {
 	  var xdomain = opts.xdomain;
@@ -39350,7 +41545,7 @@
 
 
 /***/ },
-/* 298 */
+/* 328 */
 /***/ function(module, exports) {
 
 	
@@ -39373,18 +41568,18 @@
 
 
 /***/ },
-/* 299 */
+/* 329 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module requirements.
 	 */
 
-	var XMLHttpRequest = __webpack_require__(297);
-	var Polling = __webpack_require__(300);
-	var Emitter = __webpack_require__(311);
-	var inherit = __webpack_require__(313);
-	var debug = __webpack_require__(281)('engine.io-client:polling-xhr');
+	var XMLHttpRequest = __webpack_require__(327);
+	var Polling = __webpack_require__(330);
+	var Emitter = __webpack_require__(341);
+	var inherit = __webpack_require__(343);
+	var debug = __webpack_require__(311)('engine.io-client:polling-xhr');
 
 	/**
 	 * Module exports.
@@ -39792,19 +41987,19 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 300 */
+/* 330 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(301);
-	var parseqs = __webpack_require__(312);
-	var parser = __webpack_require__(302);
-	var inherit = __webpack_require__(313);
-	var yeast = __webpack_require__(314);
-	var debug = __webpack_require__(281)('engine.io-client:polling');
+	var Transport = __webpack_require__(331);
+	var parseqs = __webpack_require__(342);
+	var parser = __webpack_require__(332);
+	var inherit = __webpack_require__(343);
+	var yeast = __webpack_require__(344);
+	var debug = __webpack_require__(311)('engine.io-client:polling');
 
 	/**
 	 * Module exports.
@@ -39817,7 +42012,7 @@
 	 */
 
 	var hasXHR2 = (function() {
-	  var XMLHttpRequest = __webpack_require__(297);
+	  var XMLHttpRequest = __webpack_require__(327);
 	  var xhr = new XMLHttpRequest({ xdomain: false });
 	  return null != xhr.responseType;
 	})();
@@ -40045,15 +42240,15 @@
 
 
 /***/ },
-/* 301 */
+/* 331 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(302);
-	var Emitter = __webpack_require__(311);
+	var parser = __webpack_require__(332);
+	var Emitter = __webpack_require__(341);
 
 	/**
 	 * Module exports.
@@ -40206,19 +42401,19 @@
 
 
 /***/ },
-/* 302 */
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var keys = __webpack_require__(303);
-	var hasBinary = __webpack_require__(304);
-	var sliceBuffer = __webpack_require__(306);
-	var base64encoder = __webpack_require__(307);
-	var after = __webpack_require__(308);
-	var utf8 = __webpack_require__(309);
+	var keys = __webpack_require__(333);
+	var hasBinary = __webpack_require__(334);
+	var sliceBuffer = __webpack_require__(336);
+	var base64encoder = __webpack_require__(337);
+	var after = __webpack_require__(338);
+	var utf8 = __webpack_require__(339);
 
 	/**
 	 * Check if we are running an android browser. That requires us to use
@@ -40275,7 +42470,7 @@
 	 * Create a blob api even for blob builder when vendor prefixes exist
 	 */
 
-	var Blob = __webpack_require__(310);
+	var Blob = __webpack_require__(340);
 
 	/**
 	 * Encodes a packet.
@@ -40807,7 +43002,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 303 */
+/* 333 */
 /***/ function(module, exports) {
 
 	
@@ -40832,7 +43027,7 @@
 
 
 /***/ },
-/* 304 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -40840,7 +43035,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(305);
+	var isArray = __webpack_require__(335);
 
 	/**
 	 * Module exports.
@@ -40897,7 +43092,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 305 */
+/* 335 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -40906,7 +43101,7 @@
 
 
 /***/ },
-/* 306 */
+/* 336 */
 /***/ function(module, exports) {
 
 	/**
@@ -40941,7 +43136,7 @@
 
 
 /***/ },
-/* 307 */
+/* 337 */
 /***/ function(module, exports) {
 
 	/*
@@ -41006,7 +43201,7 @@
 
 
 /***/ },
-/* 308 */
+/* 338 */
 /***/ function(module, exports) {
 
 	module.exports = after
@@ -41040,7 +43235,7 @@
 
 
 /***/ },
-/* 309 */
+/* 339 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/utf8js v2.0.0 by @mathias */
@@ -41286,10 +43481,10 @@
 
 	}(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(286)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(316)(module), (function() { return this; }())))
 
 /***/ },
-/* 310 */
+/* 340 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -41392,7 +43587,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 311 */
+/* 341 */
 /***/ function(module, exports) {
 
 	
@@ -41562,7 +43757,7 @@
 
 
 /***/ },
-/* 312 */
+/* 342 */
 /***/ function(module, exports) {
 
 	/**
@@ -41605,7 +43800,7 @@
 
 
 /***/ },
-/* 313 */
+/* 343 */
 /***/ function(module, exports) {
 
 	
@@ -41617,7 +43812,7 @@
 	};
 
 /***/ },
-/* 314 */
+/* 344 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -41691,7 +43886,7 @@
 
 
 /***/ },
-/* 315 */
+/* 345 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -41699,8 +43894,8 @@
 	 * Module requirements.
 	 */
 
-	var Polling = __webpack_require__(300);
-	var inherit = __webpack_require__(313);
+	var Polling = __webpack_require__(330);
+	var inherit = __webpack_require__(343);
 
 	/**
 	 * Module exports.
@@ -41936,19 +44131,19 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 316 */
+/* 346 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(301);
-	var parser = __webpack_require__(302);
-	var parseqs = __webpack_require__(312);
-	var inherit = __webpack_require__(313);
-	var yeast = __webpack_require__(314);
-	var debug = __webpack_require__(281)('engine.io-client:websocket');
+	var Transport = __webpack_require__(331);
+	var parser = __webpack_require__(332);
+	var parseqs = __webpack_require__(342);
+	var inherit = __webpack_require__(343);
+	var yeast = __webpack_require__(344);
+	var debug = __webpack_require__(311)('engine.io-client:websocket');
 	var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
 
 	/**
@@ -41960,7 +44155,7 @@
 	var WebSocket = BrowserWebSocket;
 	if (!WebSocket && typeof window === 'undefined') {
 	  try {
-	    WebSocket = __webpack_require__(317);
+	    WebSocket = __webpack_require__(347);
 	  } catch (e) { }
 	}
 
@@ -42231,13 +44426,13 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 317 */
+/* 347 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 318 */
+/* 348 */
 /***/ function(module, exports) {
 
 	
@@ -42252,7 +44447,7 @@
 	};
 
 /***/ },
-/* 319 */
+/* 349 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -42290,7 +44485,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 320 */
+/* 350 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -42298,13 +44493,13 @@
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(284);
-	var Emitter = __webpack_require__(321);
-	var toArray = __webpack_require__(322);
-	var on = __webpack_require__(323);
-	var bind = __webpack_require__(324);
-	var debug = __webpack_require__(281)('socket.io-client:socket');
-	var hasBin = __webpack_require__(325);
+	var parser = __webpack_require__(314);
+	var Emitter = __webpack_require__(351);
+	var toArray = __webpack_require__(352);
+	var on = __webpack_require__(353);
+	var bind = __webpack_require__(354);
+	var debug = __webpack_require__(311)('socket.io-client:socket');
+	var hasBin = __webpack_require__(355);
 
 	/**
 	 * Module exports.
@@ -42708,7 +44903,7 @@
 
 
 /***/ },
-/* 321 */
+/* 351 */
 /***/ function(module, exports) {
 
 	
@@ -42875,7 +45070,7 @@
 
 
 /***/ },
-/* 322 */
+/* 352 */
 /***/ function(module, exports) {
 
 	module.exports = toArray
@@ -42894,7 +45089,7 @@
 
 
 /***/ },
-/* 323 */
+/* 353 */
 /***/ function(module, exports) {
 
 	
@@ -42924,7 +45119,7 @@
 
 
 /***/ },
-/* 324 */
+/* 354 */
 /***/ function(module, exports) {
 
 	/**
@@ -42953,7 +45148,7 @@
 
 
 /***/ },
-/* 325 */
+/* 355 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -42961,7 +45156,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(326);
+	var isArray = __webpack_require__(356);
 
 	/**
 	 * Module exports.
@@ -43019,7 +45214,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 326 */
+/* 356 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -43028,7 +45223,7 @@
 
 
 /***/ },
-/* 327 */
+/* 357 */
 /***/ function(module, exports) {
 
 	
@@ -43117,298 +45312,6 @@
 	};
 
 
-
-/***/ },
-/* 328 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var defaultClickRejectionStrategy = __webpack_require__(329);
-
-	module.exports = function injectTapEventPlugin (strategyOverrides) {
-	  strategyOverrides = strategyOverrides || {}
-	  var shouldRejectClick = strategyOverrides.shouldRejectClick || defaultClickRejectionStrategy;
-
-	  __webpack_require__(35).injection.injectEventPluginsByName({
-	    "TapEventPlugin":       __webpack_require__(330)(shouldRejectClick)
-	  });
-	};
-
-
-/***/ },
-/* 329 */
-/***/ function(module, exports) {
-
-	module.exports = function(lastTouchEvent, clickTimestamp) {
-	  if (lastTouchEvent && (clickTimestamp - lastTouchEvent) < 750) {
-	    return true;
-	  }
-	};
-
-
-/***/ },
-/* 330 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-2014 Facebook, Inc.
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 * http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 *
-	 * @providesModule TapEventPlugin
-	 * @typechecks static-only
-	 */
-
-	"use strict";
-
-	var EventConstants = __webpack_require__(34);
-	var EventPluginUtils = __webpack_require__(37);
-	var EventPropagators = __webpack_require__(77);
-	var SyntheticUIEvent = __webpack_require__(91);
-	var TouchEventUtils = __webpack_require__(331);
-	var ViewportMetrics = __webpack_require__(42);
-
-	var keyOf = __webpack_require__(332);
-	var topLevelTypes = EventConstants.topLevelTypes;
-
-	var isStartish = EventPluginUtils.isStartish;
-	var isEndish = EventPluginUtils.isEndish;
-
-	var isTouch = function(topLevelType) {
-	  var touchTypes = [
-	    topLevelTypes.topTouchCancel,
-	    topLevelTypes.topTouchEnd,
-	    topLevelTypes.topTouchStart,
-	    topLevelTypes.topTouchMove
-	  ];
-	  return touchTypes.indexOf(topLevelType) >= 0;
-	}
-
-	/**
-	 * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
-	 * in order to still be considered a 'tap' event.
-	 */
-	var tapMoveThreshold = 10;
-	var ignoreMouseThreshold = 750;
-	var startCoords = {x: null, y: null};
-	var lastTouchEvent = null;
-
-	var Axis = {
-	  x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
-	  y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'}
-	};
-
-	function getAxisCoordOfEvent(axis, nativeEvent) {
-	  var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
-	  if (singleTouch) {
-	    return singleTouch[axis.page];
-	  }
-	  return axis.page in nativeEvent ?
-	    nativeEvent[axis.page] :
-	    nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
-	}
-
-	function getDistance(coords, nativeEvent) {
-	  var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
-	  var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
-	  return Math.pow(
-	    Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
-	    0.5
-	  );
-	}
-
-	var touchEvents = [
-	  topLevelTypes.topTouchStart,
-	  topLevelTypes.topTouchCancel,
-	  topLevelTypes.topTouchEnd,
-	  topLevelTypes.topTouchMove,
-	];
-
-	var dependencies = [
-	  topLevelTypes.topMouseDown,
-	  topLevelTypes.topMouseMove,
-	  topLevelTypes.topMouseUp,
-	].concat(touchEvents);
-
-	var eventTypes = {
-	  touchTap: {
-	    phasedRegistrationNames: {
-	      bubbled: keyOf({onTouchTap: null}),
-	      captured: keyOf({onTouchTapCapture: null})
-	    },
-	    dependencies: dependencies
-	  }
-	};
-
-	var now = (function() {
-	  if (Date.now) {
-	    return Date.now;
-	  } else {
-	    // IE8 support: http://stackoverflow.com/questions/9430357/please-explain-why-and-how-new-date-works-as-workaround-for-date-now-in
-	    return function () {
-	      return +new Date;
-	    }
-	  }
-	})();
-
-	function createTapEventPlugin(shouldRejectClick) {
-	  return {
-
-	    tapMoveThreshold: tapMoveThreshold,
-
-	    ignoreMouseThreshold: ignoreMouseThreshold,
-
-	    eventTypes: eventTypes,
-
-	    /**
-	     * @param {string} topLevelType Record from `EventConstants`.
-	     * @param {DOMEventTarget} topLevelTarget The listening component root node.
-	     * @param {string} topLevelTargetID ID of `topLevelTarget`.
-	     * @param {object} nativeEvent Native browser event.
-	     * @return {*} An accumulation of synthetic events.
-	     * @see {EventPluginHub.extractEvents}
-	     */
-	    extractEvents: function(
-	        topLevelType,
-	        topLevelTarget,
-	        topLevelTargetID,
-	        nativeEvent,
-	        nativeEventTarget) {
-
-	      if (isTouch(topLevelType)) {
-	        lastTouchEvent = now();
-	      } else {
-	        if (shouldRejectClick(lastTouchEvent, now())) {
-	          return null;
-	        }
-	      }
-
-	      if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
-	        return null;
-	      }
-	      var event = null;
-	      var distance = getDistance(startCoords, nativeEvent);
-	      if (isEndish(topLevelType) && distance < tapMoveThreshold) {
-	        event = SyntheticUIEvent.getPooled(
-	          eventTypes.touchTap,
-	          topLevelTargetID,
-	          nativeEvent,
-	          nativeEventTarget
-	        );
-	      }
-	      if (isStartish(topLevelType)) {
-	        startCoords.x = getAxisCoordOfEvent(Axis.x, nativeEvent);
-	        startCoords.y = getAxisCoordOfEvent(Axis.y, nativeEvent);
-	      } else if (isEndish(topLevelType)) {
-	        startCoords.x = 0;
-	        startCoords.y = 0;
-	      }
-	      EventPropagators.accumulateTwoPhaseDispatches(event);
-	      return event;
-	    }
-
-	  };
-	}
-
-	module.exports = createTapEventPlugin;
-
-
-/***/ },
-/* 331 */
-/***/ function(module, exports) {
-
-	/**
-	 * Copyright 2013-2014 Facebook, Inc.
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 * http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 *
-	 * @providesModule TouchEventUtils
-	 */
-
-	var TouchEventUtils = {
-	  /**
-	   * Utility function for common case of extracting out the primary touch from a
-	   * touch event.
-	   * - `touchEnd` events usually do not have the `touches` property.
-	   *   http://stackoverflow.com/questions/3666929/
-	   *   mobile-sarai-touchend-event-not-firing-when-last-touch-is-removed
-	   *
-	   * @param {Event} nativeEvent Native event that may or may not be a touch.
-	   * @return {TouchesObject?} an object with pageX and pageY or null.
-	   */
-	  extractSingleTouch: function(nativeEvent) {
-	    var touches = nativeEvent.touches;
-	    var changedTouches = nativeEvent.changedTouches;
-	    var hasTouches = touches && touches.length > 0;
-	    var hasChangedTouches = changedTouches && changedTouches.length > 0;
-
-	    return !hasTouches && hasChangedTouches ? changedTouches[0] :
-	           hasTouches ? touches[0] :
-	           nativeEvent;
-	  }
-	};
-
-	module.exports = TouchEventUtils;
-
-
-/***/ },
-/* 332 */
-/***/ function(module, exports) {
-
-	/**
-	 * Copyright 2013-2015, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule keyOf
-	 */
-
-	/**
-	 * Allows extraction of a minified key. Let's the build system minify keys
-	 * without losing the ability to dynamically use key strings as values
-	 * themselves. Pass in an object with a single key/val pair and it will return
-	 * you the string key of that single record. Suppose you want to grab the
-	 * value for a key 'className' inside of an object. Key/val minification may
-	 * have aliased that key to be 'xa12'. keyOf({className: null}) will return
-	 * 'xa12' in that case. Resolve keys you want to use once at startup time, then
-	 * reuse those resolutions.
-	 */
-	"use strict";
-
-	var keyOf = function (oneKeyObj) {
-	  var key;
-	  for (key in oneKeyObj) {
-	    if (!oneKeyObj.hasOwnProperty(key)) {
-	      continue;
-	    }
-	    return key;
-	  }
-	  return null;
-	};
-
-	module.exports = keyOf;
 
 /***/ }
 /******/ ]);

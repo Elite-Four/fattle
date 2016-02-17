@@ -18,7 +18,7 @@ export default class MainNav extends React.Component {
     return (
       <div>
         <AppBar
-          title="Fattle Online"
+          title="Fattle"
           iconClassNameRight="muidocs-icon-navigation-expand-more"
           onLeftIconButtonTouchTap={this.handleToggle}
         />
