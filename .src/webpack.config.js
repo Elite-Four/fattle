@@ -1,10 +1,10 @@
 const path = require('path')
 
 module.exports = {
-  context: path.join(__dirname, 'src'),
-  entry: '.',
+  context: path.join(__dirname, ''),
+  entry: './components',
   output: {
-    path: path.join(__dirname, 'static'),
+    path: path.join(__dirname, '../static'),
     filename: 'app.js'
   },
   module: {
