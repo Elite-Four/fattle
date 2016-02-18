@@ -3,7 +3,7 @@
 const path = require('path')
 const fs = require('fs')
 
-const error = require('debug')('fattle:global:error')
+const error = require('debug')('fattle:error')
 
 const Game = require('./game/nes')
 const Server = require('./server')

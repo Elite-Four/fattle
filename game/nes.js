@@ -2,7 +2,6 @@
 
 const info = require('debug')('fattle:game:info')
 const debug = require('debug')('fattle:game:debug')
-const error = require('debug')('fattle:game:error')
 const NesNes = require('nesnes')
 
 module.exports = class Game {
@@ -42,19 +41,11 @@ module.exports = class Game {
     return this.emulator.output.video.data
   }
   press (index, button) {
-    try {
-      debug(`player ${index + 1} press ${button}`)
-      return this.emulator.controllers.get(index).press(button)
-    } catch (err) {
-      error(`Press failed: ${err.message}`)
-    }
+    this.emulator.controllers.get(index).press(button)
+    info(`player ${index + 1} pressed ${button}`)
   }
   depress (index, button) {
-    try {
-      debug(`player ${index + 1} depress ${button}`)
-      return this.emulator.controllers.get(index).depress(button)
-    } catch (err) {
-      error(`Depress failed: ${err.message}`)
-    }
+    this.emulator.controllers.get(index).depress(button)
+    info(`player ${index + 1} depressed ${button}`)
   }
 }

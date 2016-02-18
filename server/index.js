@@ -21,13 +21,12 @@ module.exports = class Server extends EventEmitter {
     this.waitings = []
   }
   listen (port) {
-    info(`server listenning on ${port}`)
-
     this.io.listen(port)
+    info(`server listenning on ${port}`)
   }
 
   connect (socket) {
-    info(`client ${socket.id} connected`)
+    info(`${socket.id} connected`)
 
     socket.on('disconnect', () => this.disconnect(socket))
 
@@ -36,7 +35,7 @@ module.exports = class Server extends EventEmitter {
     this.assignPlayers()
   }
   disconnect (socket) {
-    info(`client ${socket.id} disconnected`)
+    info(`${socket.id} disconnected`)
 
     const waitingsIndex = this.waitings.indexOf(socket.id)
     if (waitingsIndex > -1) this.waitings.splice(waitingsIndex, 1)
@@ -72,37 +71,31 @@ module.exports = class Server extends EventEmitter {
     return null
   }
   assignSocketToPlayer(socket, index) {
-    info(`client ${socket.id} is player ${index + 1}`)
-
     this.players[index] = socket.id
     socket.on('press', button => this.press(socket, index, button))
     socket.on('depress', button => this.depress(socket, index, button))
 
     socket.emit('player', index)
+
+    info(`${socket.id} is assigned to player ${index + 1}`)
   }
 
   press (socket, index, button) {
     if (this.players[index] !== socket.id) return
 
-    info(`client ${socket.id} press ${button}`)
     this.emit('press', index, button)
-
-    socket.broadcast.emit('press', index, button)
+    info(`${socket.id} pressed ${button}`)
   }
   depress (socket, index, button) {
     if (this.players[index] !== socket.id) return
 
-    info(`client ${socket.id} depress ${button}`)
     this.emit('depress', index, button)
-
-    socket.broadcast.emit('depress', index, button)
+    info(`${socket.id} depressed ${button}`)
   }
   broadcastScreen (screen) {
     return encode(screen).then(buffer => {
       // debug(`screen encoded into ${buffer.length} bytes.`)
       this.io.emit('screen', buffer)
-    }, err => {
-      error(`screen encoded failed: ${err.message}`)
     })
   }
 }

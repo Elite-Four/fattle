@@ -4,7 +4,7 @@
   "description": "Fattle is a cloud service of FC(NES) game, deployed on Heroku & GitHub Pages.",
   "main": "index.js",
   "scripts": {
-    "start": "DEBUG=fattle:*:info,fattle:*:error node .",
+    "start": "DEBUG=fattle:*:info,fattle:error node .",
     "dev": "DEBUG=fattle:* nodemon ."
   },
   "repository": {
