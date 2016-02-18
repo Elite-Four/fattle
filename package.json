@@ -4,8 +4,7 @@
   "description": "Fattle is a cloud service of FC(NES) game, deployed on Heroku & GitHub Pages.",
   "main": "index.js",
   "scripts": {
-    "start": "DEBUG=fattle:*:info,fattle:error node --harmony .",
-    "dev": "DEBUG=fattle:* nodemon --harmony ."
+    "start": "DEBUG=fattle:*:info,fattle:error babel-node ."
   },
   "repository": {
     "type": "git",
@@ -23,6 +22,7 @@
   },
   "homepage": "https://github.com/Elite-Four/fattle#readme",
   "dependencies": {
+    "babel-cli": "^6.5.1",
     "debug": "^2.2.0",
     "nesnes": "^0.1.5",
     "sharp": "^0.13.0",
