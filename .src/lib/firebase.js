@@ -3,7 +3,7 @@ import Actions from '../stores/actions.js'
 
 let firebase = new Firebase('https://sweltering-fire-3594.firebaseio.com/')
 
-firebase.on('child_added', function(snapshot) {
+firebase.child('chatroom').on('child_added', function(snapshot) {
   Actions.messageReceive(snapshot.val())
 });
 
@@ -13,7 +13,7 @@ function sendMessage(name, message) {
     text: message,
     time: +new Date
   }
-  firebase.push(msg)
+  firebase.child('chatroom').push(msg)
 }
 
 export {sendMessage}

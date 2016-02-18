@@ -45694,7 +45694,7 @@
 
 	var firebase = new _firebase2.default('https://sweltering-fire-3594.firebaseio.com/');
 
-	firebase.on('child_added', function (snapshot) {
+	firebase.child('chatroom').on('child_added', function (snapshot) {
 	  _actions2.default.messageReceive(snapshot.val());
 	});
 
@@ -45704,7 +45704,7 @@
 	    text: message,
 	    time: +new Date()
 	  };
-	  firebase.push(msg);
+	  firebase.child('chatroom').push(msg);
 	}
 
 	exports.sendMessage = sendMessage;
