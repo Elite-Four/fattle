@@ -10,14 +10,32 @@ module.exports = class Game {
     const emulator = new NesNes()
 
     emulator.output.audio.setEnabled(false)
-    emulator.output.video.run = () => {}
+    emulator.config.input = [{
+			"type": "standard",
+			"input": "keyboard"
+		}, {
+			"type": "standard",
+			"input": "keyboard"
+		}]
+		emulator.input.initConfig()
 
     emulator.initCartridge(cartridge)
 
     this.emulator = emulator
   }
   run () {
-    this.emulator.run()
+    const emulator = this.emulator
+
+    if (emulator.running) return
+
+		emulator.running = true;
+		emulator.paused = false;
+
+		setImmediate(function frame() {
+      if (!emulator.paused) emulator.runFrame()
+      setImmediate(frame)
+		})
+
     info('game started')
   }
   get screen () {
@@ -25,7 +43,7 @@ module.exports = class Game {
   }
   press (index, button) {
     try {
-      debug(`Player ${index} press ${button}`)
+      debug(`player ${index + 1} press ${button}`)
       return this.emulator.controllers.get(index).press(button)
     } catch (err) {
       error(`Press failed: ${err.message}`)
@@ -33,7 +51,7 @@ module.exports = class Game {
   }
   depress (index, button) {
     try {
-      debug(`Player ${index} depress ${button}`)
+      debug(`player ${index + 1} depress ${button}`)
       return this.emulator.controllers.get(index).depress(button)
     } catch (err) {
       error(`Depress failed: ${err.message}`)
