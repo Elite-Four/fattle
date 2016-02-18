@@ -1,23 +1,29 @@
 'use strict'
 
-const ChildProcess = require('child_process')
+const path = require('path')
+const fs = require('fs')
 
-const error = require('debug')('fattle:server:error')
+const error = require('debug')('fattle:error')
 
+const Game = require('./game/nes')
 const Server = require('./server')
 
+const rom = fs.readFileSync(path.join(__dirname, 'rom.nes'))
+const cartridge = new Uint8Array(rom).buffer
+
+const game = new Game(cartridge)
 const server = new Server()
 
-const gameProcess = ChildProcess.fork('./game-process')
+server.on('press', (index, button) => game.press(index, button))
+server.on('depress', (index, button) => game.depress(index, button))
 
-server.on('press', (index, button) => gameProcess.send([true, index, button]))
-server.on('depress', (index, button) => gameProcess.send([false, index, button]))
+void function broadcast() {
+  server.broadcastScreen(game.screen)
+    .then(() => setTimeout(broadcast, 100))
+}()
 
 server.listen(process.env.PORT)
-
-gameProcess.on('message', message => {
-  server.broadcastScreen(message)
-})
+game.run()
 
 process.on('uncaughtException', err => error(`uncaught exception: ${err.stack}`))
 process.on('unhandledRejection', err => error(`unhandle rejection: ${err.stack}`))
