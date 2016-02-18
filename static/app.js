@@ -37651,13 +37651,19 @@
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Key).call(this, props));
 
 	    _this.pressButton = function () {
-	      !_this.state.isPressed && _socket2.default.emit('press', _this.state.button);
-	      _this.setState({ isPressed: true });
+	      !_this.state.isPressed && function () {
+	        _socket2.default.emit('press', _this.state.button);
+	        _this.setState({ isPressed: true });
+	        console.log('Press:', _this.state.button);
+	      }();
 	    };
 
 	    _this.depressButton = function () {
-	      _this.state.isPressed && _socket2.default.emit('depress', _this.state.button);
-	      _this.setState({ isPressed: false });
+	      _this.state.isPressed && function () {
+	        _socket2.default.emit('depress', _this.state.button);
+	        _this.setState({ isPressed: false });
+	        console.log('Unpress:', _this.state.button);
+	      }();
 	    };
 
 	    _this.state = {

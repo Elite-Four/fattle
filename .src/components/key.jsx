@@ -15,12 +15,18 @@ export default class Key extends React.Component {
     }
   }
   pressButton = () => {
-    !this.state.isPressed && socket.emit('press', this.state.button)
-    this.setState({isPressed: true})
+    !this.state.isPressed && (() => {
+      socket.emit('press', this.state.button)
+      this.setState({isPressed: true})
+      console.log('Press:', this.state.button)
+    })()
   }
   depressButton = () => {
-    this.state.isPressed && socket.emit('depress', this.state.button)
-    this.setState({isPressed: false})
+    this.state.isPressed && (() => {
+      socket.emit('depress', this.state.button)
+      this.setState({isPressed: false})
+      console.log('Unpress:', this.state.button)
+    })()
   }
   render () {
     return (
