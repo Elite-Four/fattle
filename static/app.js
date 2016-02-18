@@ -78,6 +78,19 @@
 
 	(0, _reactTapEventPlugin2.default)();
 
+	document.oncontextmenu = function (e) {
+	  return false;
+	};
+	document.onmousedown = function (e) {
+	  if (e.button == 2 || e.button == 3) {
+	    // event.cancelBubble = true
+	    // event.returnValue = false;
+	    // return false;
+	    e.preventDefault();
+	    e.stopPropagation();
+	  }
+	};
+
 	_reactDom2.default.render(_react2.default.createElement(
 	  'div',
 	  null,
@@ -37638,16 +37651,19 @@
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Key).call(this, props));
 
 	    _this.pressButton = function () {
-	      _socket2.default.emit('press', _this.state.button);
+	      !_this.state.isPressed && _socket2.default.emit('press', _this.state.button);
+	      _this.setState({ isPressed: true });
 	    };
 
 	    _this.depressButton = function () {
-	      _socket2.default.emit('depress', _this.state.button);
+	      _this.state.isPressed && _socket2.default.emit('depress', _this.state.button);
+	      _this.setState({ isPressed: false });
 	    };
 
 	    _this.state = {
 	      button: props.button,
-	      label: props.label
+	      label: props.label,
+	      isPressed: false
 	    };
 	    return _this;
 	  }
@@ -37694,7 +37710,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var socket = _socket2.default.connect('http://socket.fattle.online/');
+	// let socket = io.connect('http://socket.fattle.online/')
+	var socket = _socket2.default.connect('https://fattle-gerhut.c9users.io/');
 	socket.on('screen', function (screen) {
 	  var blob = new Blob([screen], { type: 'image/png' });
 	  var imageData = URL.createObjectURL(blob);

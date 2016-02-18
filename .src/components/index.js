@@ -8,6 +8,19 @@ import injectTapEventPlugin from 'react-tap-event-plugin'
 import '../lib/socket.js'
 injectTapEventPlugin();
 
+document.oncontextmenu = e => {
+  return false
+}
+document.onmousedown = e => {
+  if(e.button == 2 || e.button == 3){
+    // event.cancelBubble = true
+    // event.returnValue = false;
+    // return false;
+    e.preventDefault()
+    e.stopPropagation()
+  }
+}
+
 ReactDOM.render(
   <div>
     <MainNav />

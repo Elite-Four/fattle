@@ -10,14 +10,17 @@ export default class Key extends React.Component {
     super(props)
     this.state = {
       button: props.button,
-      label: props.label
+      label: props.label,
+      isPressed: false
     }
   }
   pressButton = () => {
-    socket.emit('press', this.state.button)
+    !this.state.isPressed && socket.emit('press', this.state.button)
+    this.setState({isPressed: true})
   }
   depressButton = () => {
-    socket.emit('depress', this.state.button)
+    this.state.isPressed && socket.emit('depress', this.state.button)
+    this.setState({isPressed: false})
   }
   render () {
     return (
