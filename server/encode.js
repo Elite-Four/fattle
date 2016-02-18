@@ -3,7 +3,7 @@
 const sharp = require('sharp')
 
 const encode = module.exports = function encode(graphics) {
-  const buffer = new Buffer(graphics.buffer)
+  const buffer = new Buffer(graphics)
   return sharp(buffer, {
     raw: {
       width: encode.width,
