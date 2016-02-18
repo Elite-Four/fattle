@@ -2,9 +2,7 @@ import Reflux from 'reflux'
 
 let Actions = Reflux.createActions([
   "emuUpdateScreen",
-  "emuKeyPress",
-  "emuKeyDepress",
-  "emuSelectController",
+  "messageReceive"
 ])
 
 export default Actions

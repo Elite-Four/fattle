@@ -4,11 +4,11 @@ import Actions from './actions.js'
 let Store = Reflux.createStore({
   listenables: [Actions],
   getInitialState () {
-    this.gameScreen = ''
+    this.messages = []
   },
-  onEmuUpdateScreen (imageData) {
-    this.gameScreen = imageData
-    this.trigger(this.gameScreen)
+  onMessageReceive (messages) {
+    this.messages = messages
+    this.trigger(this.messages)
   }
 })
 
