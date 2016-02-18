@@ -4,7 +4,7 @@ module.exports = {
   context: path.join(__dirname, 'src'),
   entry: '.',
   output: {
-    path: path.join(__dirname, 'app'),
+    path: path.join(__dirname, 'static'),
     filename: 'app.js'
   },
   module: {

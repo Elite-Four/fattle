@@ -8,3 +8,7 @@ socket.on('screen', screen => {
   let imageData = URL.createObjectURL(blob)
   Actions.emuUpdateScreen(imageData)
 })
+
+// socket.emit('player', 0)
+
+export default socket

@@ -1,7 +1,7 @@
 import React from 'react'
+import CardMedia from 'material-ui/lib/card/card-media'
 import Reflux from 'reflux'
-import reactMixin from 'react-mixin'
-import emuStore from '../stores/emu.js'
+import EmuStore from '../stores/emu.js'
 import Actions from '../stores/actions.js'
 
 export default class Screen extends React.Component {
@@ -10,20 +10,21 @@ export default class Screen extends React.Component {
     this.state = {
       gameScreen: null
     }
-    Reflux.listenTo(emuStore, 'onStatusChange')
+    Reflux.listenTo(EmuStore, 'onStatusChange')
   }
   onStatusChange = gameScreen => {
     this.setState({gameScreen: gameScreen});
   }
   componentDidMount () {
-    this.unsubscribe = emuStore.listen(this.onStatusChange)
+    this.unsubscribe = EmuStore.listen(this.onStatusChange)
   }
   componentWillUnmount () {
     this.unsubscribe()
   }
   render () {
-    return (<div className="screen">
-      <img className={!this.state.gameScreen ? 'hidden' : ''} src={this.state.gameScreen} alt={this.state.gameScreen} />
-    </div>)
+    return (
+      <CardMedia>
+        <img className={!this.state.gameScreen ? 'hidden' : ''} src={this.state.gameScreen} alt={this.state.gameScreen} />
+      </CardMedia>)
   }
 }
