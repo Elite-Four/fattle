@@ -11,7 +11,7 @@ function sendMessage(name, message) {
   let msg = {
     name: name,
     text: message,
-    time: +new Date
+    time: Firebase.ServerValue.TIMESTAMP
   }
   firebase.child('chatroom').push(msg)
 }
