@@ -1,8 +1,10 @@
 import Reflux from 'reflux'
 
 let Actions = Reflux.createActions([
-  "emuUpdateScreen",
-  "messageReceive"
+  'emuUpdateScreen',
+  'messageReceive',
+  'login',
+  'toolsToggle'
 ])
 
 export default Actions

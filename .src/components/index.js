@@ -1,6 +1,7 @@
 import '../stylus/main.styl'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import Tools from './tools.js'
 import MainNav from '../components/main-nav.js'
 import Game from '../components/game.js'
 import ChatBoard from '../components/chat-board.js'
@@ -19,10 +20,10 @@ document.onmousedown = e => {
     e.stopPropagation()
   }
 }
-
 ReactDOM.render(
   <div>
     <MainNav />
+    <Tools />
     <Game />
     <ChatBoard />
   </div>,

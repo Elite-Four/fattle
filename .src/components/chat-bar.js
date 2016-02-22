@@ -1,5 +1,7 @@
 import React from 'react'
+import Reflux from 'reflux'
 import TextField from 'material-ui/lib/text-field'
+import ChatStore from '../stores/chat.js'
 import {sendMessage} from '../lib/firebase.js'
 export default class ChatBar extends React.Component {
   constructor (props) {
@@ -7,6 +9,7 @@ export default class ChatBar extends React.Component {
     this.state = {
       value: ''
     }
+    Reflux.listenTo(ChatStore, 'onStatusChange')
   }
   changeValue = (e) => {
     this.setState({value: e.target.value})
