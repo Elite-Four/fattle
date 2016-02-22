@@ -13,24 +13,19 @@ export default class MainNav extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      open: false,
-      tools: false
+      open: false
     }
   }
   toggleTools = () => {
+    console.log('toggle')
     Actions.toolsToggle()
-    this.setState({tools: !this.state.tools})
   }
   render() {
     return (
-      <div>
         <AppBar
           title='Fattle'
           onLeftIconButtonTouchTap={this.toggleTools}
-          iconElementLeft={<IconButton>
-            <CommunicationChat />
-          </IconButton>}/>
-      </div>
+          />
     );
   }
 }

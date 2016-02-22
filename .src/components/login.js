@@ -17,9 +17,9 @@ export default class Login extends React.Component {
   changeValue = (e) => {
     this.setState({value: e.target.value})
   }
-  login = e => {
-    if (e.target.value) {
-      Actions.login(true)
+  login = () => {
+    if (this.state.value) {
+      Actions.login(true, this.state.value)
       this.setState({value: ''})
     }
   }

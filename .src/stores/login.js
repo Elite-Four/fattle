@@ -3,12 +3,13 @@ import Actions from './actions.js'
 
 let Store = Reflux.createStore({
   listenables: [Actions],
-  getInitialState () {
-    this.isLogin = false
-  },
-  onLogin (isLogin) {
+  isLogin: false,
+  username: 'unnamed',
+  onLogin (isLogin, username) {
     this.isLogin = isLogin
+    this.username = username
     this.trigger(this.isLogin)
+    this.trigger(this.username)
   }
 })
 

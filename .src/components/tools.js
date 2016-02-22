@@ -14,8 +14,6 @@ export default class Tools extends React.Component {
       isLogin: false,
       showTools: true
     }
-    Reflux.listenTo(LoginStore, 'onHandlerLogin')
-    // Reflux.listenTo(ToolsStore, 'onToolsToggle')
   }
   handlerLogin = bool => {
     this.setState({isLogin: bool})
@@ -24,12 +22,12 @@ export default class Tools extends React.Component {
     this.setState({showTools: bool})
   }
   componentDidMount () {
-    this.unsubscribeLogin = LoginStore.listen(this.onStatusChange)
-    // this.unsubscribeTools = ToolsStore.listen(this.onStatusChange)
+    this.unsubscribeLogin = LoginStore.listen(this.handlerLogin)
+    this.unsubscribeTools = ToolsStore.listen(this.handlerToolsToggle)
   }
   componentWillUnmount () {
     this.unsubscribeLogin()
-    // this.unsubscribeTools()
+    this.unsubscribeTools()
   }
 render () {
     return (

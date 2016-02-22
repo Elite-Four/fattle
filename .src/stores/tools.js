@@ -3,9 +3,7 @@ import Actions from './actions.js'
 
 let Store = Reflux.createStore({
   listenables: [Actions],
-  getInitialState () {
-    this.isOpen = true
-  },
+  isOpen: true,
   onToolsToggle (bool) {
     this.isOpen = (typeof bool !== 'undefined' ? bool : !this.isOpen)
     this.trigger(this.isOpen)
