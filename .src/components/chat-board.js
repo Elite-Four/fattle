@@ -6,8 +6,8 @@ export default class ChatBoard extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      messages: {text: 'No messages'},
-      showMessage: true
+      messages: {text: ''},
+      showMessage: false
     }
     Reflux.listenTo(ChatStore, 'onStatusChange')
   }

@@ -12,8 +12,10 @@ export default class ChatBar extends React.Component {
     this.setState({value: e.target.value})
   }
   sendMessage = (e) => {
-    sendMessage('username', e.target.value)
-    this.setState({value: ''})
+    if (e.target.value) {
+      sendMessage('username', e.target.value)
+      this.setState({value: ''})
+    }
   }
   render () {
     return (
@@ -22,6 +24,7 @@ export default class ChatBar extends React.Component {
         value = {this.state.value}
         onChange = {this.changeValue}
         underlineShow = {false}
+        fullWidth = {true}
         onEnterKeyDown = {this.sendMessage}/>
       )
   }
