@@ -1,4 +1,5 @@
 const path = require('path')
+const autoprefixer = require('autoprefixer')
 
 module.exports = {
   context: path.join(__dirname, ''),
@@ -10,7 +11,8 @@ module.exports = {
   module: {
     loaders: [
         { test: /\.jsx?$/, exclude: /node_modules/, loader: "babel"},
-        { test: /\.styl$/, exclude: /node_modules/, loader: "style!css!autoprefixer!stylus"}
+        { test: /\.styl$/, exclude: /node_modules/, loader: "style!css!postcss!stylus"}
     ]
-  }
+  },
+  postcss: [autoprefixer]
 }
