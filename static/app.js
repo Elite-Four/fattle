@@ -60,17 +60,17 @@
 
 	var _keypad2 = _interopRequireDefault(_keypad);
 
-	var _screen = __webpack_require__(235);
+	var _screen = __webpack_require__(236);
 
 	var _screen2 = _interopRequireDefault(_screen);
 
-	var _reactTapEventPlugin = __webpack_require__(236);
+	var _reactTapEventPlugin = __webpack_require__(237);
 
 	var _reactTapEventPlugin2 = _interopRequireDefault(_reactTapEventPlugin);
 
 	__webpack_require__(186);
 
-	__webpack_require__(241);
+	__webpack_require__(242);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21813,9 +21813,13 @@
 
 	var _socket2 = _interopRequireDefault(_socket);
 
+	var _config = __webpack_require__(235);
+
+	var _config2 = _interopRequireDefault(_config);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var socket = _socket2.default.connect('http://socket.fattle.online/');
+	var socket = _socket2.default.connect(_config2.default.gameUrl);
 	// let socket = io.connect('https://fattle-gerhut.c9users.io/')
 	socket.on('screen', function (screen) {
 	  var blob = new Blob([screen], { type: 'image/png' });
@@ -29452,6 +29456,14 @@
 
 /***/ },
 /* 235 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"gameUrl": "http://socket.fattle.online/"
+	};
+
+/***/ },
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29532,23 +29544,23 @@
 	exports.default = Screen;
 
 /***/ },
-/* 236 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var defaultClickRejectionStrategy = __webpack_require__(237);
+	var defaultClickRejectionStrategy = __webpack_require__(238);
 
 	module.exports = function injectTapEventPlugin (strategyOverrides) {
 	  strategyOverrides = strategyOverrides || {}
 	  var shouldRejectClick = strategyOverrides.shouldRejectClick || defaultClickRejectionStrategy;
 
 	  __webpack_require__(35).injection.injectEventPluginsByName({
-	    "TapEventPlugin":       __webpack_require__(238)(shouldRejectClick)
+	    "TapEventPlugin":       __webpack_require__(239)(shouldRejectClick)
 	  });
 	};
 
 
 /***/ },
-/* 237 */
+/* 238 */
 /***/ function(module, exports) {
 
 	module.exports = function(lastTouchEvent, clickTimestamp) {
@@ -29559,7 +29571,7 @@
 
 
 /***/ },
-/* 238 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -29587,10 +29599,10 @@
 	var EventPluginUtils = __webpack_require__(37);
 	var EventPropagators = __webpack_require__(77);
 	var SyntheticUIEvent = __webpack_require__(91);
-	var TouchEventUtils = __webpack_require__(239);
+	var TouchEventUtils = __webpack_require__(240);
 	var ViewportMetrics = __webpack_require__(42);
 
-	var keyOf = __webpack_require__(240);
+	var keyOf = __webpack_require__(241);
 	var topLevelTypes = EventConstants.topLevelTypes;
 
 	var isStartish = EventPluginUtils.isStartish;
@@ -29736,7 +29748,7 @@
 
 
 /***/ },
-/* 239 */
+/* 240 */
 /***/ function(module, exports) {
 
 	/**
@@ -29784,7 +29796,7 @@
 
 
 /***/ },
-/* 240 */
+/* 241 */
 /***/ function(module, exports) {
 
 	/**
@@ -29824,7 +29836,7 @@
 	module.exports = keyOf;
 
 /***/ },
-/* 241 */
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29834,7 +29846,7 @@
 	});
 	exports.sendMessage = undefined;
 
-	var _firebase = __webpack_require__(242);
+	var _firebase = __webpack_require__(243);
 
 	var _firebase2 = _interopRequireDefault(_firebase);
 
@@ -29863,7 +29875,7 @@
 	exports.default = firebase;
 
 /***/ },
-/* 242 */
+/* 243 */
 /***/ function(module, exports) {
 
 	/*! @license Firebase v2.4.2
