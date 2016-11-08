@@ -26,14 +26,12 @@ export default class Key extends React.Component {
     })()
   }
   render () {
-    return (
-        <input type="button"
-          className={`key ${this.props.button.toLowerCase()} ${this.props.type}`}
-          value = {this.props.label}
-          onMouseUp = {this.depressButton}
-          onMouseDown = {this.pressButton}
-          onMouseLeave = {this.depressButton}
-          onTouchStart = {this.pressButton}
-          onTouchEnd = {this.depressButton}/>)
+    return <a type="button"
+      className={`key ${this.props.button.toLowerCase()} ${this.props.type}`}
+      onMouseUp = {this.depressButton}
+      onMouseDown = {this.pressButton}
+      onMouseLeave = {this.depressButton}
+      onTouchStart = {this.pressButton}
+      onTouchEnd = {this.depressButton}>{this.props.label}</a>
   }
 }
