@@ -19,7 +19,7 @@ export default class Keypad extends React.Component {
         <Key label="A" button="A" type="circle"/>
         <Key label="B" button="B" type="circle"/>
         <Key label="START" button="START" type="rectangle"/>
-        <Key label="SELECT" button="SELECT" type="rectangle"/>
+        <Key label="SEL" button="SELECT" type="rectangle"/>
       </form>
   }
 }
