@@ -1,10 +1,7 @@
 import '../stylus/main.styl'
 import React from 'react'
 import ReactDOM from 'react-dom'
-import Tools from './tools.js'
-import MainNav from '../components/main-nav.js'
-import Game from '../components/game.js'
-import ChatBoard from '../components/chat-board.js'
+import Keypad from '../components/keypad.js'
 import Screen from '../components/screen.js'
 import injectTapEventPlugin from 'react-tap-event-plugin'
 import '../lib/socket.js'
@@ -22,9 +19,7 @@ document.onmousedown = e => {
 }
 ReactDOM.render(
   <div>
-    <MainNav />
-    <Tools />
-    <Game />
-    <ChatBoard />
+    <Screen />
+    <Keypad />
   </div>,
   document.getElementById('app'))

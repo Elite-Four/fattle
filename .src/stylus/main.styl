@@ -6,11 +6,68 @@ body
   margin 0
 
 .screen
-  width 256px
-  height 244px
+  // width 256px
+  // height 244px
+  width 100vw
+  height 95vw
+  max-height 70vh
+  max-width 100vw
   img
     width 100%
     height 100%
 
-.hidden
-  display none
+.keypad
+  box-sizing border-box
+  position fixed
+  bottom 0
+  width 100%
+  height 30vh
+  background #f3d784
+  border 3px solid #900
+  .key
+    position absolute
+    border 0
+    height 0
+    padding 0
+    margin 0
+    font-size 100%
+    outline 0
+    background #333
+    color white
+    box-shadow 3px black
+    &.circle
+      border-radius 100%
+      width 15vw
+      height 15vw
+      max-width 8vh
+      max-height 8vh
+      display block
+    &.rectangle
+      width 18vw
+      height 6vw
+      max-width 10vh
+      max-height 3vh
+    &.up
+      top 3.5vh
+      left 8vh
+    &.down
+      top 17.5vh
+      left 8vh
+    &.left
+      top 10.5vh
+      left 1vh
+    &.right
+      top 10.5vh
+      left 15vh
+    &.a
+      top 10.5vh
+      right 1vh
+    &.b
+      top 10.5vh
+      right 12vh
+    &.select
+      left 30vw
+      bottom 0
+    &.start
+      right 30vw
+      bottom 0

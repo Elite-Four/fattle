@@ -1,5 +1,4 @@
 import React from 'react'
-import RaisedButton from 'material-ui/lib/raised-button'
 import Reflux from 'reflux'
 import emuStore from '../stores/emu.js'
 import Actions from '../stores/actions.js'
@@ -18,24 +17,23 @@ export default class Key extends React.Component {
     !this.state.isPressed && (() => {
       socket.emit('press', this.state.button)
       this.setState({isPressed: true})
-      // console.log('Press:', this.state.button)
     })()
   }
   depressButton = () => {
     this.state.isPressed && (() => {
       socket.emit('depress', this.state.button)
       this.setState({isPressed: false})
-      // console.log('Unpress:', this.state.button)
     })()
   }
   render () {
     return (
-        <RaisedButton
-          label = {this.props.label}
+        <input type="button"
+          className={`key ${this.props.button.toLowerCase()} ${this.props.type}`}
+          value = {this.props.label}
           onMouseUp = {this.depressButton}
           onMouseDown = {this.pressButton}
           onMouseLeave = {this.depressButton}
           onTouchStart = {this.pressButton}
-          onTouchEnd = {this.depressButton} />)
+          onTouchEnd = {this.depressButton}/>)
   }
 }

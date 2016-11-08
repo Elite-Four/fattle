@@ -1,7 +1,5 @@
 import React from 'react'
 import Key from './key.js'
-import CardActions from 'material-ui/lib/card/card-actions'
-import RaisedButton from 'material-ui/lib/raised-button'
 import Reflux from 'reflux'
 import emuStore from '../stores/emu.js'
 import Actions from '../stores/actions.js'
@@ -13,16 +11,15 @@ export default class Keypad extends React.Component {
     }
   }
   render () {
-    return (
-      <CardActions>
-        <Key label="↑" button="UP" />
-        <Key label="→" button="RIGHT" />
-        <Key label="↓" button="DOWN" />
-        <Key label="←" button="LEFT" />
-        <Key label="A" button="A" />
-        <Key label="B" button="B" />
-        <Key label="START" button="START" />
-        <Key label="SELECT" button="SELECT" />
-      </CardActions>)
+    return <form className="keypad">
+        <Key label="↑" button="UP" type="circle"/>
+        <Key label="→" button="RIGHT" type="circle"/>
+        <Key label="↓" button="DOWN" type="circle"/>
+        <Key label="←" button="LEFT" type="circle"/>
+        <Key label="A" button="A" type="circle"/>
+        <Key label="B" button="B" type="circle"/>
+        <Key label="START" button="START" type="rectangle"/>
+        <Key label="SELECT" button="SELECT" type="rectangle"/>
+      </form>
   }
 }
