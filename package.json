@@ -1,0 +1,36 @@
+{
+  "name": "fattle",
+  "version": "1.0.0",
+  "description": "Fattle is a cloud service of emulator.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "standard",
+    "dev": "cross-env DEBUG=* nodemon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elite-Four/fattle.git"
+  },
+  "keywords": [
+    "emulator"
+  ],
+  "author": "George Chung <Gerhut@GMail.com>",
+  "license": "Apache-2.0",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/Elite-Four/fattle/issues"
+  },
+  "homepage": "https://github.com/Elite-Four/fattle#readme",
+  "dependencies": {
+    "debug": "^2.6.1",
+    "nesnes": "^0.3.1",
+    "raf": "^3.3.0",
+    "sharp": "^0.17.2",
+    "ws": "^2.0.3"
+  },
+  "devDependencies": {
+    "cross-env": "^3.1.4",
+    "nodemon": "^1.11.0",
+    "standard": "^8.6.0"
+  }
+}
