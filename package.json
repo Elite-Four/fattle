@@ -21,6 +21,9 @@
     "url": "https://github.com/Elite-Four/fattle/issues"
   },
   "homepage": "https://github.com/Elite-Four/fattle#readme",
+  "engines": {
+    "node": "^6.8.0"
+  },
   "dependencies": {
     "debug": "^2.6.1",
     "nesnes": "^0.3.1",
